@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Advanced Features — Solaris</title>
+<meta name="description" content="Trade journal, position sizing, portfolio risk, trading scripts, and the standalone iPhone build.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html" class="active">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-orange">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-star"/></svg>06 — Toolkit · Layers 5–7</div>
+    <h1>Advanced Features</h1>
+    <p class="dek">Trade journal, position sizing, portfolio risk, trading scripts, and mobile.</p>
+    <nav class="page-nav">
+      <a href="#journal">Trade Journal</a>
+      <a href="#sizing">Position Sizing</a>
+      <a href="#checklist">Checklist</a>
+      <a href="#risk">Risk Dashboard</a>
+      <a href="#seasonality">Seasonality</a>
+      <a href="#managers">Managers &amp; historical data</a>
+      <a href="#pine">Trading Scripts</a>
+      <a href="#mobile">Mobile</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage" id="journal">
+    <div class="substep" style="margin-top:0;">
+      <h3>Trade Journal (Layer 7)</h3>
+      <p>Record every trade with <b>setup type, entry, exit, R-multiple, and expected outcome</b>. Journal computes:</p>
+    </div>
+    <ul class="capability-list">
+      <li><b>Expectancy realized</b> — what you actually earned vs what the backtest said you should earn</li>
+      <li><b>Win/loss streaks</b> — identifies tilt and discipline gaps</li>
+      <li><b>Circuit breaker flags</b> — auto-stops if losses exceed daily/weekly/monthly cap</li>
+      <li><b>R-curve histogram</b> — visual distribution of outcomes to spot clustering</li>
+    </ul>
+  </section>
+
+  <section class="stage" id="sizing">
+    <div class="substep" style="margin-top:0;">
+      <h3>Position Sizing Calculator</h3>
+      <p>Given <b>account size, risk per trade (%), and stop distance</b>, calculates position size automatically. Enforces:</p>
+    </div>
+    <ul class="capability-list">
+      <li><b>Correlation caps</b> — no single sector >30% of open risk</li>
+      <li><b>Position caps</b> — no single trade >20% of account</li>
+      <li><b>Daily max loss</b> — typically 2–3% per day; stop trading after that</li>
+      <li><b>R-denominator</b> — all position math in R-units, not dollars, for consistency</li>
+    </ul>
+  </section>
+
+  <section class="stage" id="checklist">
+    <div class="substep" style="margin-top:0;">
+      <h3>Pre-trade Checklist (Layer 6)</h3>
+      <p>Ten binary gates to confirm before sizing:</p>
+    </div>
+    <ul class="capability-list">
+      <li>Earnings >7 sessions away</li>
+      <li>Bid-ask spread <0.1%</li>
+      <li>20d avg volume sufficient for exit</li>
+      <li>Stop placement confirmed on chart</li>
+      <li>Position size calculated and capped</li>
+      <li>No sector concentration overweight</li>
+      <li>Risk-reward ratio >1.5:1</li>
+      <li>Circuit breaker flags clear</li>
+      <li>Narrative on Ticker Detail positive</li>
+      <li>Setup on chart manually confirmed (manual market checks)</li>
+    </ul>
+  </section>
+
+  <section class="stage" id="risk">
+    <div class="substep" style="margin-top:0;">
+      <h3>Portfolio-level Risk Dashboard (Layer 0)</h3>
+      <p>Real-time view of <b>open risk by position, by sector, and by circuit-breaker threshold</b>. Shows:</p>
+    </div>
+    <ul class="capability-list">
+      <li><b>Open risk / max risk</b> — how much of your daily loss cap is already at stake</li>
+      <li><b>Sector caps</b> — Health Care cannot exceed 30% of open risk</li>
+      <li><b>Correlation overlay</b> — flag if two open positions are >0.8 correlated</li>
+      <li><b>Stop-out prices</b> — list of each position's exit triggers</li>
+    </ul>
+  </section>
+
+  <section class="stage" id="seasonality">
+    <div class="substep" style="margin-top:0;">
+      <h3>Seasonality — calendar months, sector rotation, earnings days</h3>
+      <p>Every sector ETF's average <b>excess return over SPX</b>, month by month — which sleeve has historically led each month, with previous/current/next laid out side by side so you can see whether a rotation is continuing or reversing.</p>
+    </div>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/seasonality.jpg" alt="Solaris Flow Seasonality tab — sector rotation view showing July, August, and September leaders and laggards by excess return over SPX" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Seasonality → Sector rotation</b></p>
+
+    <ul class="capability-list">
+      <li><b>Calendar months</b> — compounded seasonal windows per ticker across its full history</li>
+      <li><b>Sector rotation</b> — leaders/laggards per month, ranked by beat-rate and sample size (n)</li>
+      <li><b>Earnings days</b> — historical price behavior around a ticker's own report day</li>
+    </ul>
+
+    <div class="note">
+      <b>Sector histories differ in length</b> — XLK/XLF/XLV/XLY/XLP/XLE/XLI/XLB/XLU run back to 1999, XLRE only to 2015, XLC only to 2018. Months with fewer than 5 observations are excluded from the rankings, and a short-history sector's "lead" rests on far fewer years than XLK or XLF — the tab says this explicitly rather than letting a thin sample look as confident as a deep one.
+    </div>
+  </section>
+
+  <section class="stage" id="managers">
+  </section>
+
+  <section class="stage" id="pine">
+    <div class="substep" style="margin-top:0;">
+      <h3>Trading Scripts (18 indicators)</h3>
+      <p>Complete chart toolkit for <b>every layer of the system</b>:</p>
+    </div>
+    <ul class="capability-list">
+      <li><b>Core</b> — Moving averages, VWAP, ATR, RSI</li>
+      <li><b>Trend confirmation</b> — EMA ribbon, slope detection, trend direction signals</li>
+      <li><b>Momentum</b> — MACD, Stochastic, Bollinger Bands, volume oscillators</li>
+      <li><b>Market structure</b> — Swing highs/lows, BOS (break of structure), ChoCh (change of character)</li>
+      <li><b>Flow signals</b> — Chaikin Money Flow, accumulation/distribution days</li>
+      <li><b>Setup scanner</b> — Detects A/B/C setups live, marks them on the chart</li>
+      <li><b>Regime dashboard</b> — Market breadth, VIX, sector rotation, internals</li>
+      <li><b>Portfolio risk board</b> — Position caps, sector limits, circuit-breaker status</li>
+    </ul>
+
+    <div class="note">
+      <b>Never hardcode hex colors.</b> All 18 scripts source one color palette from <code class="mono">COLOR-SYSTEM.md</code>. To change the desk's look, update that one file and recompile the scripts. A single source of truth prevents color drift between chart and app.
+    </div>
+  </section>
+
+  <section class="stage" id="mobile">
+    <div class="substep" style="margin-top:0;">
+      <h3>Mobile &amp; Standalone (iPhone)</h3>
+      <p>A <b>self-contained HTML file</b> that runs the full Screener, Ticker Detail, and Backtest on your phone, offline:</p>
+    </div>
+    <ul class="capability-list">
+      <li><b>historical data snapshot baked in</b> — updated weekly; no live historical data from mobile (quarterly data doesn't change daily)</li>
+      <li><b>Price feed from market data</b> — CORS-enabled, works from a browser on LAN or WiFi</li>
+      <li><b>Add to Home Screen</b> — PWA installer; runs full-screen without browser chrome</li>
+      <li><b>Offline journal</b> — localStorage replay; syncs to server when you're back online</li>
+    </ul>
+    <ul class="lookfor">
+      <li>Always edit <code class="mono">tools/standalone-template.html</code> and run <code class="mono">npm run build:phone</code> — <code class="mono">standalone/index.html</code> is generated.</li>
+      <li>Phone has its own retry queue (localStorage, 8 req/min market data free tier) with the same probe logic.</li>
+    </ul>
+  </section>
+
+  <div class="page-pager">
+    <a href="backtesting.html" class="pager-link">
+      <span class="pager-label">← Layer 4</span>
+      <span class="pager-title">Backtesting</span>
+    </a>
+    <a href="faq.html" class="pager-link next">
+      <span class="pager-label">Next — Reference</span>
+      <span class="pager-title">FAQ →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

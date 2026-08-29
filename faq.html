@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — Solaris</title>
+<meta name="description" content="How Solaris Flow works, what it isn't, and common questions answered.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-help-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html" class="active">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-cyan">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-help-circle"/></svg>Reference</div>
+    <h1>Frequently Asked Questions</h1>
+    <p class="dek">How it works, what it isn't, and how to extend it.</p>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage">
+    <div class="substep" style="margin-top:0;">
+      <h3>How often is data updated?</h3>
+    </div>
+    <p class="lede">
+      Institutional holdings are quarterly (up to 45 days stale). Market tape (order flow, relative strength) updates every session at market close. Nowcast bridges the gap with modelled inference. Setup detection runs live as price updates in real time.
+    </p>
+
+    <div class="substep">
+      <h3>Can I trade this system 24/7? Crypto? Futures?</h3>
+    </div>
+    <p class="lede">
+      No. The system is built for US equities swing trading on a daily timeframe. Institutions file historical data only on equities; futures and crypto have no historical data disclosure. The Screener, Playbook, and Backtest all assume daily OHLCV bars. Intraday trading invalidates the cone-of-uncertainty math baked into the setup criteria.
+    </p>
+
+    <div class="substep">
+      <h3>Is this automated trading?</h3>
+    </div>
+    <p class="lede">
+      No. Every order is placed and exited by hand in your broker. The desk is a <b>decision-support calculator</b> — it scores quality, keeps a journal, and runs simulations. It does not connect to a broker API or place orders.
+    </p>
+
+    <div class="substep">
+      <h3>What if I want to change the position-sizing formula?</h3>
+    </div>
+    <p class="lede">
+      Edit the tool directly — it's a single self-contained HTML file in <code class="mono">tool/index.html</code> with no build step. The 0.75% risk-per-trade default in the README is the user's starting parameter, not law. Change it to 1% if that fits your account and tolerance.
+    </p>
+
+    <div class="substep">
+      <h3>How does the retry queue work?</h3>
+    </div>
+    <p class="lede">
+      Every feed failure (rate limit, 5xx, network) is classified and persisted per (ticker, feed). Rate-limit failures trigger a 30-minute defer of the whole queue — we <b>probe, not replay</b>, so the first failed call waits, then retries; we don't keep hammering. 404 errors (delisted tickers) are marked stalled and never retried.
+    </p>
+
+    <div class="substep">
+      <h3>Can I extend this or integrate it with another platform?</h3>
+    </div>
+    <p class="lede">
+      Yes. The backend is zero-dependency Node + SQLite. Data persists in <code class="mono">data/swingsys.db</code>. Every API endpoint is documented in <code class="mono">server.js</code>. Layers.html and tool/index.html can stay self-contained HTML files or be rebuilt into a frontend framework — they're yours to modify. The decision engines in <code class="mono">server/flow/</code> are pure JS with 90+ tests covering edge cases.
+    </p>
+
+    <div class="note">
+      <b>Keep the HTML tools self-contained.</b> The whole point is opening one file and having it work offline. No build step, no npm install for the user, no CDN scripts. If you rebuild, respect that.
+    </div>
+  </section>
+
+  <div class="page-pager">
+    <a href="features.html" class="pager-link">
+      <span class="pager-label">← Layers 5–7</span>
+      <span class="pager-title">Advanced Features</span>
+    </a>
+    <a href="index.html" class="pager-link next">
+      <span class="pager-label">Back to start</span>
+      <span class="pager-title">Overview →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

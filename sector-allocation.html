@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sector Allocation — Solaris</title>
+<meta name="description" content="Sector allocation treemap with glowing interactive boxes.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .treemap-container {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    margin: 40px auto;
+    aspect-ratio: 1.4;
+    background: linear-gradient(135deg, rgba(10,14,26,.5), rgba(18,26,44,.5));
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  }
+
+  svg.treemap {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .sector-box {
+    transition: filter 0.3s ease;
+  }
+
+  .sector-box:hover {
+    filter: brightness(1.15);
+  }
+
+  .sector-label {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .sector-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  @keyframes sectorGlowPulse {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(78, 137, 240, 0.4)); }
+    50% { filter: drop-shadow(0 0 16px rgba(78, 137, 240, 0.8)) drop-shadow(0 0 24px rgba(78, 137, 240, 0.5)); }
+  }
+
+  .sector-box {
+    animation: sectorGlowPulse 3s ease-in-out infinite;
+  }
+
+  .sector-box.positive {
+    fill: rgba(34, 224, 143, 0.15);
+    stroke: rgba(34, 224, 143, 0.8);
+  }
+
+  .sector-box.neutral {
+    fill: rgba(147, 181, 255, 0.15);
+    stroke: rgba(147, 181, 255, 0.8);
+  }
+
+  .sector-box.negative {
+    fill: rgba(255, 95, 109, 0.15);
+    stroke: rgba(255, 95, 109, 0.7);
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-green">
+  <div class="page-hero-inner">
+    <div class="page-kicker">Portfolio Analysis</div>
+    <h1>Sector Allocation</h1>
+    <p class="dek">Interactive treemap showing sector composition with glowing performance indicators.</p>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage">
+    <p class="lede">Sector allocation displayed as a trapezoidal treemap. Box size represents allocation percentage. Green glow indicates positive momentum, neutral blue for stable sectors.</p>
+
+    <div class="treemap-container">
+      <svg class="treemap" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <filter id="greenGlow">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <filter id="blueGlow">
+            <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <filter id="redGlow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Technology 28.4% -->
+        <polygon class="sector-box positive" points="30,50 280,50 320,350 0,350" stroke-width="3" filter="url(#greenGlow)"/>
+        <text class="sector-label" x="100" y="180" fill="#22e08f" text-anchor="middle">TECHNOLOGY</text>
+        <text class="sector-value" x="100" y="220" fill="#22e08f" text-anchor="middle">28.4%</text>
+
+        <!-- Financials 18.7% -->
+        <polygon class="sector-box neutral" points="330,50 550,50 570,350 300,350" stroke-width="3" filter="url(#blueGlow)"/>
+        <text class="sector-label" x="435" y="180" fill="#93b5ff" text-anchor="middle">FINANCIALS</text>
+        <text class="sector-value" x="435" y="220" fill="#93b5ff" text-anchor="middle">18.7%</text>
+
+        <!-- Healthcare 12.3% -->
+        <polygon class="sector-box positive" points="580,50 750,50 760,350 560,350" stroke-width="3" filter="url(#greenGlow)"/>
+        <text class="sector-label" x="665" y="180" fill="#22e08f" text-anchor="middle">HEALTHCARE</text>
+        <text class="sector-value" x="665" y="220" fill="#22e08f" text-anchor="middle">12.3%</text>
+
+        <!-- Consumer Discretionary 10.1% -->
+        <polygon class="sector-box neutral" points="20,360 220,360 240,650 0,650" stroke-width="3" filter="url(#blueGlow)"/>
+        <text class="sector-label" x="110" y="490" fill="#93b5ff" text-anchor="middle" font-size="12">CONSUMER</text>
+        <text class="sector-label" x="110" y="510" fill="#93b5ff" text-anchor="middle" font-size="12">DISCRETIONARY</text>
+        <text class="sector-value" x="110" y="550" fill="#93b5ff" text-anchor="middle">10.1%</text>
+
+        <!-- Industrials 8.7% -->
+        <polygon class="sector-box neutral" points="250,360 420,360 435,650 240,650" stroke-width="3" filter="url(#blueGlow)"/>
+        <text class="sector-label" x="330" y="490" fill="#93b5ff" text-anchor="middle">INDUSTRIALS</text>
+        <text class="sector-value" x="330" y="540" fill="#93b5ff" text-anchor="middle">8.7%</text>
+
+        <!-- Energy 6.2% -->
+        <polygon class="sector-box negative" points="450,360 580,360 595,650 435,650" stroke-width="3" filter="url(#redGlow)"/>
+        <text class="sector-label" x="520" y="490" fill="#ff5f6d" text-anchor="middle">ENERGY</text>
+        <text class="sector-value" x="520" y="540" fill="#ff5f6d" text-anchor="middle">6.2%</text>
+
+        <!-- Other 5.6% -->
+        <polygon class="sector-box negative" points="610,360 720,360 735,650 595,650" stroke-width="3" filter="url(#redGlow)"/>
+        <text class="sector-label" x="665" y="490" fill="#ff5f6d" text-anchor="middle">OTHER</text>
+        <text class="sector-value" x="665" y="540" fill="#ff5f6d" text-anchor="middle">5.6%</text>
+      </svg>
+    </div>
+  </section>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <div class="footer-mark"><img src="assets/brand-icon.png" alt="Solaris"></div>
+      <p class="footer-text">Solaris Flow — Institutional swing-trade research tool.</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-head">Product</div>
+      <ul class="footer-nav">
+        <li><a href="walkthrough.html">Walkthrough</a></li>
+        <li><a href="screener.html">Screener</a></li>
+        <li><a href="features.html">Features</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-head">Learn</div>
+      <ul class="footer-nav">
+        <li><a href="architecture.html">Architecture</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Solaris. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticker Detail — Solaris</title>
+<meta name="description" content="Layers 3-5 of Solaris Flow: the complete institutional flow argument for a single ticker.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-bar-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="18" y1="20" x2="18" y2="4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html" class="active">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-purple">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-bar-chart"/></svg>03 — The Argument · Layers 3–5</div>
+    <h1>Ticker Detail</h1>
+    <p class="dek">The complete argument. What the desk concludes about a name, why, and how that's changed.</p>
+    <nav class="page-nav">
+      <a href="#evidence">Evidence blocks</a>
+      <a href="#scoring">Composite score</a>
+      <a href="#state">State &amp; Transition</a>
+      <a href="#nowcast">Nowcast</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage" id="evidence">
+    <p class="lede">
+      Ticker Detail reads <b>top to bottom as one coherent argument</b>: identity and this week's price action, the narrative verdict, composite signal score, institutional position changes, market tape, and context. Nothing here is silent — every block can return nulls with a note explaining why.
+    </p>
+
+    <div class="frame reveal">
+      <div class="frame-bar">
+        <div class="frame-dots"><i></i><i></i><i></i></div>
+        <span class="frame-url">index.html — Ticker Detail → Overview &amp; Verdict</span>
+      </div>
+      <div class="frame-body">
+        <div class="identity">
+          <span class="sym">ABCD</span>
+          <span class="co">Example Company · last session 2026-08-28 · 1,255 stored sessions</span>
+        </div>
+        <div class="pillrow" style="margin-bottom:14px;">
+          <span class="tag">Health Care (XLV)</span>
+          <span class="tag">$236.25B · mega cap</span>
+          <span class="tag">float 99.6%</span>
+        </div>
+        <div class="price-row">
+          <span class="px tab">432.42</span>
+          <span class="chg tab down">−1.05% today</span>
+        </div>
+        <div class="kv-grid">
+          <div class="kv"><div class="kl">52-week range</div><div class="kv2">262.49 → 447.03</div><div class="ksub">92% of the way up</div></div>
+          <div class="kv"><div class="kl">Cumulative volume</div><div class="kv2 good">51.52M / 20d</div><div class="ksub">+9.65% vs prior 20</div></div>
+          <div class="kv"><div class="kl">OBV</div><div class="kv2 good">Confirming advance</div><div class="ksub">+4.2d avg volume / 25 sessions</div></div>
+          <div class="kv"><div class="kl">RSI(14)</div><div class="kv2">64.6</div><div class="ksub">neutral · bull range</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/ticker-chart.jpg" alt="Solaris Flow Ticker Detail — Example daily candlestick chart with SMA 20/50/200 and average volume overlay" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Ticker Detail</b> daily chart, Example</p>
+
+    <div class="substep">
+      <h3>The four evidence blocks</h3>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card reveal ic-blue">
+        <h3><svg class="fi-icon"><use href="#i-trending-up"/></svg>LiveFlow (35%)</h3>
+        <p>Chaikin Money Flow, close location, up/down volume ratio, relative strength vs SPX. Live price/volume behavior.</p>
+      </div>
+      <div class="feature-card reveal ic-amber">
+        <h3><svg class="fi-icon"><use href="#i-shield"/></svg>Shortside (20%)</h3>
+        <p>Off-exchange short volume, short interest delta, days to cover. Market structure and directional pressure.</p>
+      </div>
+    </div>
+
+    <div class="substep">
+      <h3>Origins — where the historical data money is concentrated geographically</h3>
+      <p>The Ownership block isn't just a number — the <b>Origins</b> tab maps every tracked filer's HQ, sized by how much they collectively hold, so "institutional demand" stops being an abstraction.</p>
+    </div>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/origins.jpg" alt="Solaris Flow Origins tab — world map with tracked institutional filers sized by holdings, concentrated in the US Northeast and Midwest with clusters in Europe and Asia" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Origins</b> tab</p>
+  </section>
+
+  <section class="stage" id="scoring">
+    <div class="substep" style="margin-top:0;">
+      <h3>Composite scoring</h3>
+      <p>
+        Each block contributes to a <b>0–100 score</b> showing whether evidence leans toward accumulation or distribution. Confidence is separate from strength — high confidence means all four blocks had measurable data; partial means one or more was unavailable (quarterly lag, penny stock, etc.).
+      </p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>Accumulation</b> — institutions buying, tape paying for moves, shorts covering, insiders buying</li>
+      <li><b>Neutral</b> — evidence splits; no clear directional bias</li>
+      <li><b>Distribution</b> — institutions selling, tape rolling over, shorts building, insiders trimming</li>
+    </ul>
+
+    <div class="frame reveal">
+      <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — composite signal</span></div>
+      <div class="frame-body">
+        <div class="score-hero">
+          <div class="score-num tab">63.1</div>
+          <div class="score-meta">
+            <div class="sm-label">ACCUMULATION</div>
+            <div class="sm-sub">confidence <b style="color:var(--app-green)">high</b> · evidence coverage 100% · <b style="color:var(--app-text)">92nd percentile</b> of 39 tracked tickers</div>
+          </div>
+        </div>
+        <div class="ev-block">
+          <div class="ev-head"><span class="evn">Ownership</span><span class="evs tab">71.1 · 30%</span></div>
+          <div class="ev-bar-track"><div class="ev-bar-fill" data-fill="71.1%"></div></div>
+        </div>
+        <div class="ev-block">
+          <div class="ev-head"><span class="evn">LiveFlow</span><span class="evs tab">66.5 · 35%</span></div>
+          <div class="ev-bar-track"><div class="ev-bar-fill" data-fill="66.5%"></div></div>
+        </div>
+        <div class="ev-block">
+          <div class="ev-head"><span class="evn">Shortside</span><span class="evs tab">63.8 · 20%</span></div>
+          <div class="ev-bar-track"><div class="ev-bar-fill" data-fill="63.8%"></div></div>
+        </div>
+        <div class="ev-block">
+          <div class="ev-head"><span class="evn">Insider</span><span class="evs tab">38.4 · 15%</span></div>
+          <div class="ev-bar-track"><div class="ev-bar-fill" data-fill="38.4%"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="state">
+    <div class="substep" style="margin-top:0;">
+      <h3>State &amp; Transition (three-dimensional read) <span class="badge-live"><i></i>Live</span></h3>
+      <p>
+        A 3×3 grid showing <b>price drift vs flow strength</b> across nine named phases (Accumulation, Confirmed Advance, Unbacked Advance, Distribution Risk, Confirmed Decline, etc.). Tells you not just what the signal is today, but how it's evolved over the last 30 days.
+      </p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>30d ago, 15d ago, today</b> — state history with supporting context (RS, nowcast, short pressure)</li>
+      <li><b>Confirmed vs Unbacked</b> — is price rising with tape agreement, or running ahead without support?</li>
+      <li><b>±0.5σ threshold</b> — a phase must clear this to be entered; ±0.25 hold for 3 sessions to publish</li>
+    </ul>
+  </section>
+
+  <section class="stage" id="nowcast">
+    <div class="substep" style="margin-top:0;">
+      <h3>Nowcast — bridging the historical data reporting gap <span class="badge-live"><i></i>Inferred</span></h3>
+      <p>
+         data are <b>up to 45 days stale</b> by design. The Nowcast asks only whether price/volume since the quarter-close has moved with or against the last-known institutional direction — inference from tape, never disclosure.
+      </p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>Last confirmed direction</b> — what active managers held as of quarter-end</li>
+      <li><b>Price since</b> — observed move, not inferred</li>
+      <li><b>Money flow since</b> — CMF and up/down volume over the gap window</li>
+      <li><b>Verdict</b> — trend likely continuing, trend diverging, no signal</li>
+    </ul>
+
+    <div class="note">
+      <b>Modelled inference, not disclosure.</b> The nowcast is never wrong because it's not making a claim about what institutions actually did — only whether recent price action is consistent with their last-known direction.
+    </div>
+  </section>
+
+  <div class="page-pager">
+    <a href="screener.html" class="pager-link">
+      <span class="pager-label">← Layer 2</span>
+      <span class="pager-title">The Screener</span>
+    </a>
+    <a href="level-playbook.html" class="pager-link next">
+      <span class="pager-label">Next — Layer 3</span>
+      <span class="pager-title">Level Playbook →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

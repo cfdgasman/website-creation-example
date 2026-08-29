@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Screener — Solaris</title>
+<meta name="description" content="Layer 2 of Solaris Flow: universe and setup preconditions across 500+ tickers.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="21" y1="21" x2="16.3" y2="16.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html" class="active">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-teal">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-search"/></svg>02 — Discovery · Layer 2</div>
+    <h1>The Screener</h1>
+    <p class="dek">Universe and setup preconditions. Find candidates that clear the automatable bar before drilling into individual charts.</p>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage">
+    <p class="lede">
+      The Screener is the entry point: <b>sort 500+ tickers</b> by preset filters or create your own watchlist, then see which names qualify against four categories of rules.
+    </p>
+
+    <div class="substep" style="margin-top:0;">
+      <h3>Built-in filters</h3>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>My watchlist</b> — custom selection from portfolio, notes, or manual entry</li>
+      <li><b>Candidates in leading sectors</b> — XLS, XLE, XLV, etc., ranked in top 3 of 11 sectors</li>
+      <li><b>In accumulation</b> — institutional net buying over last 90 days (historical data + nowcast)</li>
+      <li><b>Discount (VWAP)</b> — price below the daily VWAP over last 20 sessions</li>
+      <li><b>Close to VAL</b> — price within one ATR of the volume-area low</li>
+      <li><b>Near earnings dates</b> — >7 sessions from report day (setup gate)</li>
+    </ul>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/screener.jpg" alt="Solaris Flow Screener — Example qualify card showing 12/12 across Universe, Relative Strength, Trend Structure, and Contraction categories" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Screener</b>, Example qualify card</p>
+
+
+    <div class="substep">
+      <h3>Four-category qualification</h3>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card reveal ic-teal">
+        <h3><svg class="fi-icon"><use href="#i-grid"/></svg>Universe</h3>
+        <p>Liquid, tradeable names. Price >$10, 20d avg volume >$25M, optionable, earnings >7 sessions out.</p>
+      </div>
+      <div class="feature-card reveal ic-green">
+        <h3><svg class="fi-icon"><use href="#i-trending-up"/></svg>Relative Strength</h3>
+        <p>Outperforms S&P 500 over 63d, outperforms sector over 21d, sector ranked top-3.</p>
+      </div>
+      <div class="feature-card reveal ic-blue">
+        <h3><svg class="fi-icon"><use href="#i-activity"/></svg>Trend Structure</h3>
+        <p>Price >200DMA, 200DMA flat/rising, 50DMA >200DMA. Classic uptrend alignment.</p>
+      </div>
+      <div class="feature-card reveal ic-orange">
+        <h3><svg class="fi-icon"><use href="#i-filter"/></svg>Contraction</h3>
+        <p>ATR compressed vs own 50d avg, range tightening, consolidation volume below 20d average.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Manual vs automatic gates.</b> Optionable, earnings distance, and M&A status can't be scored from a price feed — they're marked with a dot, not a checkmark. A name missing one or two automatable boxes still qualifies as "Close" and is worth a second look.
+    </div>
+
+    <ul class="lookfor">
+      <li><b>18 of 530</b> typical candidates pass every automatable box; 154 miss by just one or two.</li>
+      <li>Passing the Screener means Layer 2 is clear — not that you should trade it yet; Layer 3 setup quality still matters.</li>
+      <li>Clicking a candidate drills into Ticker Detail, where the institutional flow analysis happens.</li>
+    </ul>
+  </section>
+
+  <div class="page-pager">
+    <a href="architecture.html" class="pager-link">
+      <span class="pager-label">← Layer 0–7</span>
+      <span class="pager-title">Core Architecture</span>
+    </a>
+    <a href="ticker-detail.html" class="pager-link next">
+      <span class="pager-label">Next — Layers 3–5</span>
+      <span class="pager-title">Ticker Detail →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

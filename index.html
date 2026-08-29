@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solaris Flow — A Personal Trading Research Tool</title>
+<meta name="description" content="A personal research tool for studying institutional flow and swing-trading setups.  data, order flow analysis, technical structure, and performance analysis.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><polyline points="12 7 12 12 15.5 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-help-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bar-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="18" y1="20" x2="18" y2="4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="12 5 19 12 12 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="kicker">Swing Trading Decision Support</div>
+    <h1 class="title">Solaris Flow</h1>
+    <div class="title-underline"></div>
+    <p class="dek">
+      A personal <b>research tool</b> for studying institutional flow and swing-trading setups — not a commercial platform or professional service. Integrates  data, order flow analysis, technical structure, and a rules-based system to score setup quality and explore trade ideas across multiple timeframes.
+    </p>
+    <div class="meta-row">
+      <span>Platform <b>Web-based + Node.js backend</b></span>
+      <span>Update frequency <b>Daily with real-time analysis</b></span>
+      <span>Coverage <b>Full US equities universe</b></span>
+    </div>
+
+    <div class="hero-ctas">
+      <a href="walkthrough.html" class="btn btn-primary">See the guided walkthrough <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="12 5 19 12 12 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a href="architecture.html" class="btn btn-ghost">Explore the architecture</a>
+    </div>
+
+    <div class="ticker-marquee">
+      <div class="ticker-track">
+        <span class="tick up">XLK <b>+1.83%</b></span>
+        <span class="tick down">XLY <b>−2.14%</b></span>
+        <span class="tick up">XLC <b>+3.06%</b></span>
+        <span class="tick down">XLV <b>−0.42%</b></span>
+        <span class="tick up">XLK <b>+0.91%</b></span>
+        <span class="tick up">XLV <b>+2.27%</b></span>
+        <span class="tick down">XLF <b>−0.68%</b></span>
+        <span class="tick up">XLK <b>+1.55%</b></span>
+        <span class="tick down">XLE <b>−1.02%</b></span>
+        <span class="tick up">XLY <b>+0.74%</b></span>
+        <span class="tick up">XLK <b>+1.83%</b></span>
+        <span class="tick down">XLY <b>−2.14%</b></span>
+        <span class="tick up">XLC <b>+3.06%</b></span>
+        <span class="tick down">XLV <b>−0.42%</b></span>
+        <span class="tick up">XLK <b>+0.91%</b></span>
+        <span class="tick up">XLV <b>+2.27%</b></span>
+        <span class="tick down">XLF <b>−0.68%</b></span>
+        <span class="tick up">XLK <b>+1.55%</b></span>
+        <span class="tick down">XLE <b>−1.02%</b></span>
+        <span class="tick up">XLY <b>+0.74%</b></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="hero-banner">
+  <div class="hero-banner-frame">
+    <img src="assets/hero-banner.jpg" alt="Solaris Flow Analyzer — institutional flow, sector heatmap, tape analytics, setup scorecard, and multi-timeframe views" loading="eager">
+    <div class="hb-overlay">
+      <svg class="hb-globe-lines" viewBox="0 0 1344 768" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="hbRayFadeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0" />
+            <stop offset="12%" stop-color="#fff" stop-opacity="1" />
+            <stop offset="78%" stop-color="#fff" stop-opacity="1" />
+            <stop offset="100%" stop-color="#fff" stop-opacity="0" />
+          </linearGradient>
+          <mask id="hbRayFade" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+            <rect x="0" y="0" width="1" height="1" fill="url(#hbRayFadeGrad)" />
+          </mask>
+        </defs>
+        <path class="hb-globe-line" mask="url(#hbRayFade)" d="M240,230 C400,55 650,55 810,150" style="animation-delay:0s" />
+        <path class="hb-globe-line" mask="url(#hbRayFade)" d="M240,230 C450,185 660,190 910,260" style="animation-delay:1.33s" />
+        <path class="hb-globe-line" mask="url(#hbRayFade)" d="M240,230 C420,20 600,10 780,60" style="animation-delay:2.66s" />
+        <path class="hb-globe-line" mask="url(#hbRayFade)" d="M240,230 C500,140 750,150 980,220" style="animation-delay:4s" />
+        <path class="hb-globe-line" mask="url(#hbRayFade)" d="M240,230 C380,170 560,150 760,180" style="animation-delay:5.33s" />
+        <path class="hb-globe-line" mask="url(#hbRayFade)" d="M240,230 C330,120 470,70 640,90" style="animation-delay:6.66s" />
+      </svg>
+      <!-- Sector Allocation Treemap - Soft Fading Glow -->
+      <svg class="hb-treemap" viewBox="0 0 1344 768" preserveAspectRatio="none" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
+        <defs>
+          <filter id="hbSectorGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="10"/>
+          </filter>
+          <style>
+            @keyframes hbSectorFadePulse {
+              0%, 100% { opacity: 0.12; }
+              50% { opacity: 0.4; }
+            }
+            .hb-sector-glow { animation: hbSectorFadePulse 4s ease-in-out infinite; filter: url(#hbSectorGlow); stroke: none; }
+          </style>
+        </defs>
+        <!-- Technology Box -->
+        <polygon class="hb-sector-glow" points="1052,131 1154,121 1154,225 1052,229" fill="#22e08f" style="animation-delay:0s"/>
+        <!-- Financials Box -->
+        <polygon class="hb-sector-glow" points="1157,121 1245,110 1245,221 1157,225" fill="#22e08f" style="animation-delay:.3s"/>
+        <!-- Healthcare Box -->
+        <polygon class="hb-sector-glow" points="1248,114 1341,102 1341,216 1248,220" fill="#ff5f6d" style="animation-delay:.6s"/>
+        <!-- Consumer Discretionary Box -->
+        <polygon class="hb-sector-glow" points="1052,236 1131,235 1131,304 1052,305" fill="#22e08f" style="animation-delay:.9s"/>
+        <!-- Industrials Box -->
+        <polygon class="hb-sector-glow" points="1135,230 1214,230 1214,303 1135,304" fill="#22e08f" style="animation-delay:1.2s"/>
+        <!-- Energy Box -->
+        <polygon class="hb-sector-glow" points="1218,228 1281,225 1281,303 1218,303" fill="#ff5f6d" style="animation-delay:1.5s"/>
+        <!-- Other Box -->
+        <polygon class="hb-sector-glow" points="1284,224 1341,223 1341,301 1284,303" fill="#ff5f6d" style="animation-delay:1.8s"/>
+      </svg>
+      <div class="hb-solaris-glow"><span style="animation-delay:0s">S</span><span style="animation-delay:.18s">O</span><span style="animation-delay:.36s">L</span><span style="animation-delay:.54s">A</span><span style="animation-delay:.72s">R</span><span style="animation-delay:.9s">I</span><span style="animation-delay:1.08s">S</span></div>
+      <div class="hb-metric hb-metric-1">62</div>
+      <div class="hb-metric hb-metric-2">87</div>
+      <div class="hb-bar hb-bar-1"></div>
+      <div class="hb-bar hb-bar-2"></div>
+      <div class="hb-bar hb-bar-3"></div>
+      <div class="hb-bar hb-bar-4"></div>
+    </div>
+  </div>
+</div>
+
+<div class="stat-strip">
+  <div class="strip-item ic-blue"><div class="strip-num">8</div><div class="strip-label">Decision Layers</div></div>
+  <div class="strip-item ic-teal"><div class="strip-num">18</div><div class="strip-label">Trading Scripts</div></div>
+  <div class="strip-item ic-green"><div class="strip-num">90+</div><div class="strip-label">Automated Tests</div></div>
+  <div class="strip-item ic-amber"><div class="strip-num">0</div><div class="strip-label">Runtime Dependencies*</div></div>
+  <div class="strip-item ic-purple"><div class="strip-num">3</div><div class="strip-label">Setup Types (A/B/C)</div></div>
+</div>
+
+<div class="wide-shell">
+  <section class="stage" style="margin-top:48px;">
+    <div style="text-align:center; max-width:680px; margin:0 auto 8px;">
+      <h2 style="font-size:1.8rem;">The live Board</h2>
+      <p class="lede" style="margin:12px auto 0; text-align:center;">Every tracked ticker, ranked by composite score, with the historical data and daily-tape evidence sitting right next to it — this is the screen the desk opens to.</p>
+    </div>
+
+    <div class="shot-frame reveal" style="margin-top:24px;">
+      <img src="assets/screens/board.jpg" alt="Solaris Flow Board tab — accumulation/distribution ranking across the watchlist with score, verdict, confidence, institutional float, dark short %, and insider net columns" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Board</b> tab, my watchlist view</p>
+  </section>
+
+  <section class="stage">
+    <div style="text-align:center; max-width:640px; margin:0 auto 8px;">
+      <h2 style="font-size:1.8rem;">One coherent decision system</h2>
+      <p class="lede" style="margin:12px auto 0; text-align:center;">Eight pages, one for each layer of the desk. Read them in order the first time — each builds directly on the one before it.</p>
+    </div>
+
+    <div class="nav-card-grid">
+      <a href="walkthrough.html" class="nav-card reveal ic-pink">
+        <div class="nc-icon"><svg><use href="#i-book"/></svg></div>
+        <div class="nc-num">· START HERE</div>
+        <h3>Guided Walkthrough</h3>
+        <p>Walkthrough example using a symbolic ticker, followed start to finish through the exact order the desk argues in — Screener, Ticker Detail, Level Playbook, Backtest — plus the six tabs beyond that loop.</p>
+        <span class="nc-link">Read the walkthrough <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="architecture.html" class="nav-card reveal ic-blue">
+        <div class="nc-icon"><svg><use href="#i-activity"/></svg></div>
+        <div class="nc-num">01 — FOUNDATION</div>
+        <h3>Core Architecture</h3>
+        <p>The eight-layer decision framework, from market regime down to the trade journal. How the pieces fit together and why the order matters.</p>
+        <span class="nc-link">Read the architecture <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="screener.html" class="nav-card reveal ic-teal">
+        <div class="nc-icon"><svg><use href="#i-grid"/></svg></div>
+        <div class="nc-num">02 — DISCOVERY</div>
+        <h3>The Screener</h3>
+        <p>Sort 500+ tickers against a four-category checklist — universe, relative strength, trend, contraction — to find today's candidates.</p>
+        <span class="nc-link">See the screener <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="ticker-detail.html" class="nav-card reveal ic-purple">
+        <div class="nc-icon"><svg><use href="#i-bar-chart"/></svg></div>
+        <div class="nc-num">03 — THE ARGUMENT</div>
+        <h3>Ticker Detail</h3>
+        <p>, market tape, short interest, and insider activity blended into a single 0–100 composite score with full evidence shown.</p>
+        <span class="nc-link">Read a full ticker page <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="level-playbook.html" class="nav-card reveal ic-amber">
+        <div class="nc-icon"><svg><use href="#i-target"/></svg></div>
+        <div class="nc-num">04 — EXECUTION</div>
+        <h3>Level Playbook</h3>
+        <p>Reconstructed volume profile plus five AVWAP anchors decide what to do now that price is at a level — never on a wick, only on closes.</p>
+        <span class="nc-link">Open the playbook <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="backtesting.html" class="nav-card reveal ic-green">
+        <div class="nc-icon"><svg><use href="#i-rotate-ccw"/></svg></div>
+        <div class="nc-num">05 — VALIDATION</div>
+        <h3>Backtesting</h3>
+        <p>multi-period performance for every Setup A/B/C signal — win rate, expectancy, drawdown — measured against an honest baseline.</p>
+        <span class="nc-link">Check the numbers <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="features.html" class="nav-card reveal ic-orange">
+        <div class="nc-icon"><svg><use href="#i-star"/></svg></div>
+        <div class="nc-num">06 — TOOLKIT</div>
+        <h3>Advanced Features</h3>
+        <p>Trade journal, position sizing, pre-trade checklist, portfolio risk dashboard, trading scripts, and a standalone iPhone build.</p>
+        <span class="nc-link">See the full toolkit <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+      <a href="faq.html" class="nav-card reveal ic-cyan">
+        <div class="nc-icon"><svg><use href="#i-help-circle"/></svg></div>
+        <div class="nc-num">· REFERENCE</div>
+        <h3>FAQ</h3>
+        <p>How data updates, what this isn't, the security model (no login — a LAN pairing code instead), and how to extend the platform.</p>
+        <span class="nc-link">Read the FAQ <svg><use href="#i-arrow-right"/></svg></span>
+      </a>
+    </div>
+  </section>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money. <i>Zero dependencies applies to the client-facing HTML tools; the server backend uses Node.js + SQLite, and the experimental predictor uses machine learning server-side only.</i></p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  <span>Built with plain HTML, CSS &amp; JS — no framework, no build step.</span>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

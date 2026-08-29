@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solaris - Animated Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0e1a;
+  font-family: 'Arial', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: calc(100vh * 1344 / 768);
+  max-height: calc(100vw * 768 / 1344);
+  aspect-ratio: 1344 / 768;
+  margin: auto;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Glowing network arc lines over the globe */
+.globe-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.globe-line {
+  fill: none;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  animation: globeLineGlow 8s ease-in-out infinite;
+}
+
+@keyframes globeLineGlow {
+  0% { stroke: #22e08f; opacity: 0.95; filter: drop-shadow(0 0 7px rgba(34, 224, 143, 0.9)) drop-shadow(0 0 18px rgba(34, 224, 143, 0.5)); }
+  12.5% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(34, 224, 143, 0.3)); }
+  25% { stroke: #ffc94a; opacity: 0.95; filter: drop-shadow(0 0 7px rgba(255, 201, 74, 0.9)) drop-shadow(0 0 18px rgba(255, 201, 74, 0.5)); }
+  37.5% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(255, 201, 74, 0.3)); }
+  50% { stroke: #d6f0ff; opacity: 0.95; filter: drop-shadow(0 0 7px rgba(214, 240, 255, 0.95)) drop-shadow(0 0 18px rgba(214, 240, 255, 0.55)); }
+  62.5% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(214, 240, 255, 0.3)); }
+  75% { stroke: #ff5f6d; opacity: 0.95; filter: drop-shadow(0 0 7px rgba(255, 95, 109, 0.9)) drop-shadow(0 0 18px rgba(255, 95, 109, 0.5)); }
+  87.5% { opacity: 0.3; filter: drop-shadow(0 0 2px rgba(255, 95, 109, 0.3)); }
+  100% { stroke: #22e08f; opacity: 0.95; filter: drop-shadow(0 0 7px rgba(34, 224, 143, 0.9)) drop-shadow(0 0 18px rgba(34, 224, 143, 0.5)); }
+}
+
+/* White glow that shimmers letter-by-letter across the SOLARIS wordmark (no box, hugs the glyphs) */
+.solaris-glow {
+  position: absolute;
+  inset: 0;
+}
+.solaris-glow span {
+  position: absolute;
+  top: 46.48%;
+  height: 8.07%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  font-size: clamp(10px, 3.2vw, 46px);
+  color: transparent;
+  animation: solarisLetterGlow 3.2s ease-in-out infinite;
+}
+/* precise per-letter position, measured from the source image */
+.solaris-glow span:nth-child(1) { left: 37.50%; width: 3.27%; }
+.solaris-glow span:nth-child(2) { left: 41.59%; width: 4.54%; border-radius: 50%; border: 2px solid transparent; color: transparent; animation-name: solarisRingGlow; }
+.solaris-glow span:nth-child(3) { left: 47.10%; width: 2.83%; }
+.solaris-glow span:nth-child(4) { left: 50.74%; width: 4.09%; animation-name: solarisLetterGlowSoft; }
+.solaris-glow span:nth-child(5) { left: 55.80%; width: 3.35%; }
+.solaris-glow span:nth-child(6) { left: 60.27%; width: 0.67%; animation-name: solarisLetterGlowSoft; }
+.solaris-glow span:nth-child(7) { left: 61.90%; width: 3.27%; }
+
+@keyframes solarisLetterGlow {
+  0%, 100% { text-shadow: 0 0 5px rgba(147, 181, 255, 0.14); }
+  50% { text-shadow: 0 0 13px rgba(147, 181, 255, 0.85), 0 0 26px rgba(79, 137, 240, 0.55); }
+}
+
+/* O rendered as an actual ring (not a font glyph) so it sits exactly on the real letter's circular stroke */
+@keyframes solarisRingGlow {
+  0%, 100% { border-color: rgba(147, 181, 255, 0.3); box-shadow: 0 0 6px rgba(79, 137, 240, 0.4); }
+  50% { border-color: rgba(191, 215, 255, 1); box-shadow: 0 0 20px rgba(79, 137, 240, 0.9), inset 0 0 12px rgba(147, 181, 255, 0.55); }
+}
+
+/* dimmer peak for narrower letters (A, I) so the word doesn't glow uniformly bright */
+@keyframes solarisLetterGlowSoft {
+  0%, 100% { text-shadow: 0 0 4px rgba(147, 181, 255, 0.1); }
+  50% { text-shadow: 0 0 8px rgba(147, 181, 255, 0.5), 0 0 16px rgba(79, 137, 240, 0.3); }
+}
+
+/* Scan line effect */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(79, 137, 240, 0.8), transparent);
+  box-shadow: 0 0 20px rgba(79, 137, 240, 0.6);
+  animation: scanMove 5s linear infinite;
+}
+
+@keyframes scanMove {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* Glowing metric numbers - aligned to gauge numerals (invisible text, glow only) */
+.metric-glow {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+  font-size: clamp(12px, 1.55vw, 22px);
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  color: transparent;
+  animation: metricGlow 2.5s ease-in-out infinite;
+}
+
+/* "62" - Market Breadth gauge */
+.metric-glow:nth-child(9) {
+  left: 94.38%;
+  top: 56.51%;
+  animation-delay: 0s;
+}
+
+/* "87" - Setup Scorecard gauge */
+.metric-glow:nth-child(10) {
+  left: 75.19%;
+  top: 76.24%;
+  animation-delay: 0.6s;
+}
+
+@keyframes metricGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(74, 222, 128, 0.35), 0 0 3px rgba(74, 222, 128, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 22px rgba(74, 222, 128, 0.85), 0 0 42px rgba(74, 222, 128, 0.45);
+  }
+}
+
+/* Logo bars glow - transparent fill, halo only (never hides the real bar underneath) */
+.logo-bar-glow {
+  position: absolute;
+  border-radius: 3px;
+  background: transparent;
+  animation: logoBarPulse 2s ease-in-out infinite;
+}
+
+.logo-bar-glow:nth-child(11) {
+  left: 27.01%;
+  width: 1.41%;
+  bottom: 45.57%;
+  height: 12.5%;
+  --glow: 91, 147, 245;
+  animation-delay: 0s;
+}
+
+.logo-bar-glow:nth-child(12) {
+  left: 29.24%;
+  width: 1.41%;
+  bottom: 45.57%;
+  height: 9.77%;
+  --glow: 45, 212, 191;
+  animation-delay: 0.2s;
+}
+
+.logo-bar-glow:nth-child(13) {
+  left: 31.47%;
+  width: 1.41%;
+  bottom: 45.57%;
+  height: 7.29%;
+  --glow: 251, 146, 60;
+  animation-delay: 0.4s;
+}
+
+.logo-bar-glow:nth-child(14) {
+  left: 33.63%;
+  width: 1.41%;
+  bottom: 45.57%;
+  height: 5.47%;
+  --glow: 241, 104, 90;
+  animation-delay: 0.6s;
+}
+
+@keyframes logoBarPulse {
+  0%, 100% {
+    box-shadow: 0 0 14px 2px rgba(var(--glow), 0.55), inset 0 0 10px rgba(var(--glow), 0.35);
+  }
+  50% {
+    box-shadow: 0 0 32px 4px rgba(var(--glow), 0.95), inset 0 0 18px rgba(var(--glow), 0.6);
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <img src="assets/hero-banner.jpg" alt="Solaris Dashboard" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+  <div class="overlay" style="z-index: 2;">
+    <!-- Glowing network arc lines over the globe -->
+    <svg class="globe-lines" viewBox="0 0 1344 768" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="rayFadeGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#fff" stop-opacity="0" />
+          <stop offset="12%" stop-color="#fff" stop-opacity="1" />
+          <stop offset="78%" stop-color="#fff" stop-opacity="1" />
+          <stop offset="100%" stop-color="#fff" stop-opacity="0" />
+        </linearGradient>
+        <mask id="rayFade" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+          <rect x="0" y="0" width="1" height="1" fill="url(#rayFadeGrad)" />
+        </mask>
+      </defs>
+      <path class="globe-line" mask="url(#rayFade)" d="M240,230 C400,55 650,55 810,150" style="animation-delay:0s" />
+      <path class="globe-line" mask="url(#rayFade)" d="M240,230 C450,185 660,190 910,260" style="animation-delay:1.33s" />
+      <path class="globe-line" mask="url(#rayFade)" d="M240,230 C420,20 600,10 780,60" style="animation-delay:2.66s" />
+      <path class="globe-line" mask="url(#rayFade)" d="M240,230 C500,140 750,150 980,220" style="animation-delay:4s" />
+      <path class="globe-line" mask="url(#rayFade)" d="M240,230 C380,170 560,150 760,180" style="animation-delay:5.33s" />
+      <path class="globe-line" mask="url(#rayFade)" d="M240,230 C330,120 470,70 640,90" style="animation-delay:6.66s" />
+    </svg>
+
+    <!-- Letter-by-letter shimmer across SOLARIS wordmark -->
+    <div class="solaris-glow"><span style="animation-delay:0s">S</span><span style="animation-delay:.18s">O</span><span style="animation-delay:.36s">L</span><span style="animation-delay:.54s">A</span><span style="animation-delay:.72s">R</span><span style="animation-delay:.9s">I</span><span style="animation-delay:1.08s">S</span></div>
+
+    <!-- Metric glows -->
+    <div class="metric-glow">62</div>
+    <div class="metric-glow">87</div>
+
+    <!-- Logo bar glows -->
+    <div class="logo-bar-glow"></div>
+    <div class="logo-bar-glow"></div>
+    <div class="logo-bar-glow"></div>
+    <div class="logo-bar-glow"></div>
+
+    <!-- Scan line -->
+    <div class="scan-line"></div>
+  </div>
+</div>
+
+</body>
+</html>

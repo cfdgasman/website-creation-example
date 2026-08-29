@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Level Playbook — Solaris</title>
+<meta name="description" content="Layer 3 of Solaris Flow: the level-interaction engine deciding what to do now that price is at a level.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html" class="active">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-amber">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-target"/></svg>04 — Execution · Layer 3</div>
+    <h1>Level Playbook</h1>
+    <p class="dek">The interaction engine. Not "where are the levels," but "what do you do now that price is AT one."</p>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage">
+    <p class="lede">
+      Every swing trade starts at a level — a volume accumulation zone, a VWAP anchor, a swing pivot. The Playbook <b>reconstructs the 
+    <div class="feature-highlight">
+      <h4>Four load-bearing design rules (locked in by tests)</h4>
+      <p><b>A touch is not a signal; a close is.</b> Every state is decided on daily closes, never on intraday wicks or speculation. <b>TESTING always instructs waiting.</b> A level state is binary only after a close outside the test zone. <b>Materiality floors.</b> A level under 0.15 ATR breaks constantly and is noise; thresholds scale with the bar length. <b>State machine reads in order:</b> rejection before acceptance — a retest of a level weeks ago belongs to that level, not to a later entry.</p>
+    </div>
+
+    <div class="substep">
+      <h3>Volume Profile</h3>
+      <p>The profile <b>spreads a session's volume evenly</b> across its high-low range. Identifies:</p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>POC (Point of Control)</b> — price level with highest volume</li>
+      <li><b>Value Area (70% of volume)</b> — the range where serious business happened</li>
+      <li><b>HVN / LVN</b> — high and low volume nodes; targets, not decision points</li>
+      <li><b>Profile shape</b> — b-shaped (accumulation), p-shaped (distribution), or bell (no opinion)</li>
+    </ul>
+
+    <div class="substep">
+      <h3>Five-anchor AVWAP setup</h3>
+    </div>
+
+    <ul class="capability-list">
+                  <li><b>                </ul>
+
+    <div class="frame reveal">
+      <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Ticker Detail → Level Playbook</span></div>
+      <div class="frame-body">
+        <div class="kv-grid" style="margin-bottom:18px;">
+          <div class="kv"><div class="kl">Price</div><div class="kv2">432.42</div><div class="ksub">2026-08-28</div></div>
+          <div class="kv"><div class="kl">ATR(14)</div><div class="kv2">9.06</div><div class="ksub">2.09% of price</div></div>
+          <div class="kv"><div class="kl">Trend</div><div class="kv2 good">Uptrend</div><div class="ksub">50DMA 385.94</div></div>
+        </div>
+        <div class="verdict-box">
+          <div class="vh" style="color:var(--app-text)">No level in play</div>
+          <p>Price is not close enough to any mapped level for a level-based decision. This is the state the desk should be in most of the time.</p>
+        </div>
+        <h4>Confluence stacked below (support)</h4>
+        <ul class="confluence-list">
+          <li>Impulse POC <b>412.54</b></li>
+          <li>Fib 61.8% <b>388.24</b></li>
+          <li>AVWAP #6 (custom) <b>373.38</b></li>
+          <li>Impulse VAL <b>363.79</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="substep">
+      <h3>When a level <i>is</i> in play — a real failed breakout</h3>
+      <p>"No level in play" isn't the only state. Here's an example of the day the auction ladder actually had something to say — a level rejected, and the plan's instruction is explicit about what to do next.</p>
+    </div>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/level-playbook.jpg" alt="Solaris Flow Level Playbook — price action analysis with volume zones, OHLC bars, support/resistance levels, auction analysis, and setup detection" loading="lazy">
+    </div>
+    <p class="shot-caption"><b>Level Playbook</b> — price action analysis with volume zones</p>
+
+    <p class="lede">
+      Price broke above the Impulse POC at 220.86, failed to hold, and closed back below it. The plan's instruction for this is unambiguous: <b>exit on the close, do not wait for the stop</b> — the buyers from the break were trapped and become the supply that drives the next leg down. The ladder on the right reads the profile shape as <b>balanced (normal)</b> — volume concentrated around the POC with even tails, a two-sided auction expecting rotation rather than trend — and flags a demand zone at 205.73–212.10 where 26% of the profile's volume traded and price has since risen away from it.
+    </p>
+
+    <div class="substep">
+      <h3>Setup A, B, C detection</h3>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card reveal ic-blue">
+        <h3><svg class="fi-icon"><use href="#i-target"/></svg>Setup A: AVWAP Reclaim Pullback</h3>
+        <p>Price pulls back to an AVWAP, holds above it (no closes below), then reclaims it on volume. Highest-quality entry, lowest win rate — takes discipline to wait.</p>
+      </div>
+      <div class="feature-card reveal ic-amber">
+        <h3><svg class="fi-icon"><use href="#i-zap"/></svg>Setup B: Value Area Breakout</h3>
+        <p>Price breaks above the daily value area on volume with no immediate rejection. More frequent, lower R per trade but high volume signals participation.</p>
+      </div>
+      <div class="feature-card reveal ic-teal">
+        <h3><svg class="fi-icon"><use href="#i-rotate-ccw"/></svg>Setup C: Failed Breakdown</h3>
+        <p>Price undercuts a level (VAL or swing low) on weak volume, then reclaims it. Classic institutional trapping of shorts. Rare, high conviction when it happens.</p>
+      </div>
+    </div>
+
+    <ul class="lookfor">
+      <li><b>"No level in play" is honest.</b> Most days price is not close enough to any mapped level to matter — that's when you go do something else.</li>
+      <li>Every setup carries at least one condition (manual market checks character) that can't be scored from daily OHLCV — the Playbook's ceiling is "NEEDS YOUR EYES."</li>
+      <li>The vertical scale is the profile's own span, plus price and ±2σ bands — never a longer window that squashes the read.</li>
+    </ul>
+  </section>
+
+  <div class="page-pager">
+    <a href="ticker-detail.html" class="pager-link">
+      <span class="pager-label">← Layers 3–5</span>
+      <span class="pager-title">Ticker Detail</span>
+    </a>
+    <a href="backtesting.html" class="pager-link next">
+      <span class="pager-label">Next — Layer 4</span>
+      <span class="pager-title">Backtesting →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
