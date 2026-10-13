@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Core Architecture — Solaris</title>
+<meta name="description" content="The eight-layer decision framework behind Solaris Flow, from market regime through the trade journal.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><polyline points="12 7 12 12 15.5 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="4" y1="10" x2="4" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="8" x2="12" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="20" y1="21" x2="20" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="20" y1="12" x2="20" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="1" y1="14" x2="7" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="17" y1="16" x2="23" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html" class="active">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-blue">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-activity"/></svg>01 — Foundation</div>
+    <h1>Core Architecture</h1>
+    <p class="dek">Eight-layer decision framework. Each layer builds on the previous, from market regime through position-level mechanics — so a ticker that fails an early layer never wastes time in a later one.</p>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage" id="overview">
+    <p class="lede">
+      Solaris Flow implements a <b>complete decision system</b> organized as eight discrete layers. Each one answers a specific question, in order, so traders can quickly rule out tickers that fail early criteria before investing time in deeper analysis.
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature-card reveal ic-blue">
+        <h3><svg class="fi-icon"><use href="#i-activity"/></svg>Layer 0: Regime</h3>
+        <p>Market structure, sector rotation, and breadth. Is the current regime suitable for your system's edge?</p>
+      </div>
+      <div class="feature-card reveal ic-teal">
+        <h3><svg class="fi-icon"><use href="#i-filter"/></svg>Layer 1: Selection</h3>
+        <p>Correlation caps and portfolio-level filters. Does this name fit your current exposure profile?</p>
+      </div>
+      <div class="feature-card reveal ic-purple">
+        <h3><svg class="fi-icon"><use href="#i-grid"/></svg>Layer 2: Universe</h3>
+        <p>Technical preconditions and trading profile. Does this ticker pass the automatable setup checklist? — see the <a href="screener.html">Screener</a>.</p>
+      </div>
+      <div class="feature-card reveal ic-amber">
+        <h3><svg class="fi-icon"><use href="#i-target"/></svg>Layer 3: Playbook</h3>
+        <p>Level interaction and price action. What should you do <i>now that price is at a level</i>? — see the <a href="level-playbook.html">Level Playbook</a>.</p>
+      </div>
+      <div class="feature-card reveal ic-green">
+        <h3><svg class="fi-icon"><use href="#i-clock"/></svg>Layer 4: Backtest</h3>
+        <p>Historical setup performance. Does your signal have positive expectancy over the past 3–5 years? — see <a href="backtesting.html">Backtesting</a>.</p>
+      </div>
+      <div class="feature-card reveal ic-orange">
+        <h3><svg class="fi-icon"><use href="#i-sliders"/></svg>Layer 5: Management</h3>
+        <p>Position sizing and exit rules. What's your risk per trade and how do you manage winners?</p>
+      </div>
+      <div class="feature-card reveal ic-cyan">
+        <h3><svg class="fi-icon"><use href="#i-check-square"/></svg>Layer 6: Checklist</h3>
+        <p>Pre-trade confirmation. Ten binary gates: optionable, earnings distance, bid-ask spread, etc.</p>
+      </div>
+      <div class="feature-card reveal ic-pink">
+        <h3><svg class="fi-icon"><use href="#i-book"/></svg>Layer 7: Journal</h3>
+        <p>Trade recording and expectancy analysis. How did your <i>actual</i> trades perform against the plan?</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="regime-live">
+    <div class="substep" style="margin-top:0;">
+      <h3>Layer 0 in the real app — Regime</h3>
+      <p>The regime call is a single letter (R1–R4) plus the two numbers that actually drive position sizing: max open risk and max concurrent positions.</p>
+    </div>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/regime.jpg" alt="Solaris Flow Regime tab — R1 Long, full size badge, SPX/GLD context, CPI inflation cards, and 36-month CPI, 180-session SPX and GLD charts" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Regime</b> tab</p>
+
+    <div class="substep">
+      <h3>Layer 1 in the real app — Sector Rotation</h3>
+      <p>"You only shop in the top 3" is not a suggestion — it's a literal ranking, refreshed daily, with a quadrant read on each sector.</p>
+    </div>
+
+    <div class="shot-frame reveal">
+      <img src="assets/screens/sector-rotation.jpg" alt="Solaris Flow Sectors tab — full 11-sector RS ranking table with quadrant reads, plus Leading/Improving/Weakening/Lagging grouping" loading="lazy">
+    </div>
+    <p class="shot-caption">Real screenshot — <b>Sectors</b> tab</p>
+  </section>
+
+  <section class="stage" id="why">
+    <div class="substep" style="margin-top:0;">
+      <h3>Why this structure?</h3>
+      <p>
+        The eight layers work as a filter: Layer 0 eliminates days when regime is broken; Layer 2 eliminates tickers that don't meet setup criteria; Layer 3 eliminates times when price is not near a level; Layer 4 eliminates setups without edge. By the time you reach Layer 6, you've already ruled out 90% of possibilities — the checklist items are binary confirmations of a trade you've already decided is worth the work.
+      </p>
+    </div>
+
+    <div class="substep">
+      <h3>Where each layer lives in the desk</h3>
+      <p>Layers aren't abstract — each maps to a concrete screen or file in the actual application:</p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>Layer 0 (Regime)</b> — market-breadth indices tab + sector rotation dashboard in <code class="mono">index.html</code></li>
+      <li><b>Layer 1 (Selection)</b> — correlation cap logic, portfolio-level risk board</li>
+      <li><b>Layer 2 (Universe)</b> — the <a href="screener.html">Screener tab</a>, scored by <code class="mono">server/flow/analytics.js</code></li>
+      <li><b>Layer 3 (Playbook)</b> — the <a href="level-playbook.html">Level Playbook tab</a>, powered by <code class="mono">flow/levels.js</code> + <code class="mono">flow/playbook.js</code></li>
+      <li><b>Layer 4 (Backtest)</b> — the <a href="backtesting.html">Backtest tab</a>, replaying Setup A/B/C over stored bars</li>
+      <li><b>Layer 5 (Management)</b> — the position-size calculator in <code class="mono">tool/index.html</code></li>
+      <li><b>Layer 6 (Checklist)</b> — the 10-point pre-trade checklist, also in <code class="mono">tool/index.html</code></li>
+      <li><b>Layer 7 (Journal)</b> — the trade journal with expectancy breakdowns and circuit-breaker flags</li>
+    </ul>
+
+    <div class="note">
+      <b>Two codebases, one set of decision engines.</b> The Layer Desk (<code class="mono">layers/index.html</code>) and its server-synced twin (<code class="mono">server/public/layers.html</code>) share identical decision logic — only the log-handling functions differ, so the audit trail can persist across devices without forking the rules themselves.
+    </div>
+  </section>
+
+  <div class="page-pager">
+    <a href="index.html" class="pager-link">
+      <span class="pager-label">← Back</span>
+      <span class="pager-title">Overview</span>
+    </a>
+    <a href="screener.html" class="pager-link next">
+      <span class="pager-label">Next — Layer 2</span>
+      <span class="pager-title">The Screener →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

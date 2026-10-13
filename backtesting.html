@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backtesting — Solaris</title>
+<meta name="description" content="Layer 4 of Solaris Flow: multi-period backtest performance for Setup A/B/C, plus an experimental ML predictor.">
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html" class="active">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero ic-green">
+  <div class="page-hero-inner">
+    <div class="page-kicker"><svg><use href="#i-rotate-ccw"/></svg>05 — Validation · Layer 4</div>
+    <h1>Backtesting</h1>
+    <p class="dek">Historical signal performance. Does your setup have an edge, or just a track record?</p>
+  </div>
+</header>
+
+<div class="page-shell">
+  <section class="stage">
+    <p class="lede">
+      The Backtest tab <b>replays the Playbook's Setup A/B/C detection</b> over 750 stored daily bars (3+ years) and measures performance — win rate, average R, expectancy, drawdown.
+    </p>
+
+    <div class="substep" style="margin-top:0;">
+      <h3>multi-period validation</h3>
+      <p>
+        Performance is measured multi-period: the model is <b>retrained from scratch at each fold</b>, tested only on bars strictly newer than the training set, with a 1-session purge at the boundary. A single 80/20 split on ~50 sessions has a 95% confidence interval 14 points wide — useless. multi-period with 30+ folds is meaningful.
+      </p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box reveal ic-blue">
+        <svg class="fi-icon"><use href="#i-target"/></svg>
+        <div class="stat-label">Win Rate</div>
+        <div class="stat-value">22–42%</div>
+        <div class="stat-sub">Setup A vs B typical range</div>
+      </div>
+      <div class="stat-box reveal ic-green">
+        <svg class="fi-icon"><use href="#i-trending-up"/></svg>
+        <div class="stat-label">Average R per trade</div>
+        <div class="stat-value">+0.12–0.47R</div>
+        <div class="stat-sub">Setup B vs A typical range</div>
+      </div>
+      <div class="stat-box reveal ic-purple">
+        <svg class="fi-icon"><use href="#i-activity"/></svg>
+        <div class="stat-label">Expectancy (Avg R × Win%)</div>
+        <div class="stat-value">+0.12–0.18R</div>
+        <div class="stat-sub">Setup average across 3y history</div>
+      </div>
+      <div class="stat-box reveal ic-amber">
+        <svg class="fi-icon"><use href="#i-shield"/></svg>
+        <div class="stat-label">Max Drawdown</div>
+        <div class="stat-value">2.0–2.6R</div>
+        <div class="stat-sub">Equity curve trough</div>
+      </div>
+    </div>
+
+    <div class="frame reveal">
+      <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Ticker Detail → Backtest</span></div>
+      <div class="frame-body">
+        <h4>Per-setup performance</h4>
+        <div class="tbl-wrap">
+          <table class="dtable">
+            <tr><th>Setup</th><th style="text-align:right">Signals</th><th style="text-align:right">Win rate</th><th style="text-align:right">Expectancy</th><th style="text-align:right">Max DD</th></tr>
+            <tr><td>A — AVWAP Reclaim Pullback</td><td class="num">9</td><td class="num">22%</td><td class="num up">+0.47R</td><td class="num">2.00R</td></tr>
+            <tr><td>B — Value Area Breakout</td><td class="num">45</td><td class="num">42%</td><td class="num up">+0.12R</td><td class="num">2.08R</td></tr>
+            <tr><td>C — Failed Breakdown</td><td class="num">1</td><td class="num">100%</td><td class="num up">+0.27R</td><td class="num">0.00R</td></tr>
+            <tr><td><b>All setups combined</b></td><td class="num"><b>55</b></td><td class="num"><b>40%</b></td><td class="num up"><b>+0.18R</b></td><td class="num"><b>2.56R</b></td></tr>
+            <tr><td>MA — 50/200 crossover (baseline)</td><td class="num">3</td><td class="num">33%</td><td class="num down">−0.35R</td><td class="num">1.64R</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="substep">
+      <h3>Win rate vs expectancy — the key insight</h3>
+      <p>
+        Setup A has a <b>22% win rate but +0.47R average</b> — a few large winners carry many small, planned losses. Setup B has a <b>42% win rate but only +0.12R average</b> — more frequent but smaller. Both are profitable, just different risk profiles.
+      </p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>Expectancy = (Win% × Avg Win) − (Loss% × Avg Loss)</b> — net edge per trade risked</li>
+      <li><b>Positive expectancy</b> is necessary but not sufficient; you still need discipline on position sizing and exit timing</li>
+      <li><b>Baseline comparison</b> — MA crossover gets −0.35R, showing your Playbook has a real edge</li>
+    </ul>
+
+    <div class="substep">
+      <h3>Predictor (experimental) <span class="badge-live"><i></i>ML model</span></h3>
+      <p>
+        An optional <b>machine-learning model</b> trained on multi-period folds to predict next-session direction. Measured against the base rate ("always up" — daily closes drift up). Honest verdict when the interval covers the base rate: "no measurable edge."
+      </p>
+    </div>
+
+    <ul class="capability-list">
+      <li><b>Purged multi-period, never one split</b> — the model is retrained from scratch at each fold</li>
+      <li><b>Baseline is majority class</b> — "always up" on most tickers beats 50%, so you have to beat that, not randomness</li>
+      <li><b>Standardisation fitted on training rows only</b> — live prediction uses the fold's own scaling</li>
+      <li><b>Ensemble spread reported</b> — one random seed is one opinion; two runs of the same net can disagree</li>
+    </ul>
+
+    <div class="note">
+      <b>Most tickers have no measurable edge.</b> That's the expected result on ~70% of names and is not a bug. A multi-period interval that covers the base rate means the model cannot tell signal from noise on that ticker with that data. Run the Playbook setups instead — they have edge across the board.
+    </div>
+  </section>
+
+  <div class="page-pager">
+    <a href="level-playbook.html" class="pager-link">
+      <span class="pager-label">← Layer 3</span>
+      <span class="pager-title">Level Playbook</span>
+    </a>
+    <a href="features.html" class="pager-link next">
+      <span class="pager-label">Next — Layers 5–7</span>
+      <span class="pager-title">Advanced Features →</span>
+    </a>
+  </div>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site is an illustrative example for demonstration purposes only — none of it is real trading analysis or a recommendation on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Solaris Flow — a personal swing trading decision-support platform.</span>
+  
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

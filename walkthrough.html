@@ -1,0 +1,1513 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading the Tape — Solaris Flow Walkthrough</title>
+<link rel="icon" type="image/png" href="assets/brand-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ---------- tokens ----------
+     Navy & Blue — matches the main site (assets/style.css). Dark navy is
+     the permanent brand look, not gated behind the visitor's OS theme. */
+  :root{
+    --bg: #0a0e1a;
+    --surface: #121a2c;
+    --surface-2: #19233a;
+    --ink: #eef1f8;
+    --ink-soft: #a9b3c7;
+    --ink-faint: #6f7a92;
+    --rule: #26314a;
+    --accent: #4f89f0;
+    --accent-ink: #ffffff;
+    --accent-soft: #172544;
+    --link: #82b1ff;
+    --good: #3ecf6f;
+    --bad: #f1685a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -18px rgba(0,0,0,.7);
+  }
+
+  /* app-recreation palette: same navy family, used for the .frame recreations */
+  :root{
+    --app-bg: #0a0e1a;
+    --app-surface: #121a2c;
+    --app-surface-2: #19233a;
+    --app-border: #26314a;
+    --app-text: #eef1f8;
+    --app-text-dim: #8a94ad;
+    --app-green: #3ecf6f;
+    --app-red: #f1685a;
+    --app-blue: #4f89f0;
+    --app-amber: #e0a94a;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', -apple-system, "Segoe UI", sans-serif;
+    font-size:16.5px;
+    line-height:1.6;
+  }
+
+  /* ---------- top navigation (matches every other page on the site) ---------- */
+  .topnav{
+    position:sticky; top:0; z-index:50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--rule);
+  }
+  .topnav-inner{
+    max-width:1180px; margin:0 auto;
+    padding:14px clamp(18px,4vw,56px);
+    display:flex; align-items:center; gap:24px;
+  }
+  .topnav-brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem;
+    color:var(--ink); flex:none; text-decoration:none;
+  }
+  .topnav-brand:hover{ text-decoration:none; }
+  .topnav-brand .brand-mark{
+    width:28px; height:28px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    flex:none; overflow:hidden;
+  }
+  .topnav-brand .brand-mark img{ width:100%; height:100%; display:block; object-fit:contain; }
+  .topnav-links{
+    display:flex; gap:4px; flex:1;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .topnav-links::-webkit-scrollbar{ display:none; }
+  .topnav-links a{
+    font-size:13.5px; color:var(--ink-soft);
+    padding:7px 12px; border-radius:6px;
+    white-space:nowrap;
+    border-bottom:2px solid transparent;
+    text-decoration:none;
+  }
+  .topnav-links a:hover{ background:var(--surface-2); color:var(--ink); text-decoration:none; }
+  .topnav-links a.active{ color:var(--accent); font-weight:600; border-bottom-color:var(--accent); }
+  .topnav-gh{
+    flex:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    border:1px solid var(--rule);
+    padding:6px 12px;
+    border-radius:20px;
+    display:flex; align-items:center; gap:6px;
+    text-decoration:none;
+  }
+  .topnav-gh:hover{ border-color:var(--accent); color:var(--accent); text-decoration:none; }
+  .topnav-gh svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+  /* ---------- legal notice (consolidated, end of page) ---------- */
+  .legal-notice{
+    position:relative; overflow:hidden;
+    max-width:1180px; margin: 40px auto 24px; padding: 0 clamp(18px,4vw,56px);
+  }
+  .legal-notice-box{
+    position:relative; overflow:hidden;
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--app-amber) 15%, var(--surface)),
+      color-mix(in srgb, var(--app-amber) 5%, var(--surface)));
+    border:1px solid color-mix(in srgb, var(--app-amber) 45%, var(--rule));
+    border-left:4px solid var(--app-amber);
+    border-radius:8px;
+    padding:20px 24px;
+  }
+  .legal-notice-box::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--app-amber) 7%, transparent) 0 10px,
+      transparent 10px 20px);
+    pointer-events:none;
+  }
+  .legal-notice-inner{ position:relative; z-index:1; }
+  .legal-notice .ln-title{
+    display:flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    color:var(--app-amber); margin-bottom:12px;
+  }
+  .legal-notice .ln-title svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; }
+  .legal-notice p{ font-size:.86rem; line-height:1.65; color:var(--ink-soft); margin:0 0 10px; }
+  .legal-notice p:last-child{ margin-bottom:0; }
+  .legal-notice b{ color:var(--ink); }
+
+  /* ---------- entry disclaimer modal (shown once per browser) ---------- */
+  .disclaimer-modal{
+    position:fixed; inset:0; z-index:9999;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(4,7,14,.86); backdrop-filter:blur(3px);
+    padding:20px;
+  }
+  .disclaimer-modal[hidden]{ display:none; }
+  .disclaimer-box{
+    max-width:540px; width:100%;
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--app-amber) 15%, var(--surface)),
+      color-mix(in srgb, var(--app-amber) 5%, var(--surface)));
+    border:1px solid color-mix(in srgb, var(--app-amber) 45%, var(--rule));
+    border-left:4px solid var(--app-amber);
+    border-radius:10px;
+    padding:26px 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
+  }
+  .disclaimer-box .dm-title{
+    display:flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+    text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    color:var(--app-amber); margin-bottom:14px;
+  }
+  .disclaimer-box .dm-title svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; }
+  .disclaimer-box p{ font-size:.88rem; line-height:1.65; color:var(--ink-soft); margin:0 0 14px; }
+  .disclaimer-box p b{ color:var(--ink); }
+  .disclaimer-box .dm-btn{
+    display:inline-block; margin-top:2px;
+    padding:10px 22px; border:none; border-radius:8px;
+    background:var(--app-amber); color:#0a0e1a;
+    font-family:'Public Sans', sans-serif; font-weight:700; font-size:.85rem;
+    cursor:pointer; transition: filter .15s ease;
+  }
+  .disclaimer-box .dm-btn:hover{ filter:brightness(1.08); }
+
+  h1,h2,h3,h4{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600;
+    text-wrap:balance;
+    margin:0 0 .4em;
+    color:var(--ink);
+  }
+
+  a{ color:var(--link); }
+
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, Menlo, monospace; }
+  .tab{ font-variant-numeric: tabular-nums; }
+
+  /* ---------- shell / layout ---------- */
+  .shell{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 clamp(18px, 4vw, 56px) 120px;
+    display:grid;
+    grid-template-columns: 210px minmax(0,1fr);
+    gap:56px;
+  }
+  @media (max-width: 920px){
+    .shell{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    padding: 48px clamp(18px,4vw,56px) 34px;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:44px;
+  }
+  .masthead-inner{ max-width:1180px; margin:0 auto; }
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:16px;
+  }
+  .kicker::before{
+    content:"";
+    width:7px; height:7px; border-radius:50%;
+    background:var(--app-green);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--app-green) 20%, transparent);
+  }
+  h1.title{
+    font-size:clamp(2.2rem, 4.4vw, 3.2rem);
+    line-height:1.05;
+    max-width:14ch;
+  }
+  .dek{
+    font-size:1.12rem;
+    color:var(--ink-soft);
+    max-width:60ch;
+    margin-top:14px;
+  }
+  .dek b{ color:var(--ink); font-weight:600; }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:10px 22px;
+    margin-top:22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .meta-row span b{ color:var(--ink-soft); font-weight:600; }
+
+  /* ---------- toc ---------- */
+  .toc{
+    position:sticky; top:28px; align-self:start;
+    height:max-content;
+  }
+  .toc-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--ink-faint);
+    margin-bottom:12px;
+  }
+  .toc ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  .toc a{
+    display:flex; gap:10px; align-items:baseline;
+    text-decoration:none;
+    color:var(--ink-soft);
+    padding:7px 10px;
+    border-radius:7px;
+    font-size:14px;
+    border-left:2px solid transparent;
+  }
+  .toc a .n{ font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); font-size:12px; }
+  .toc a:hover{ background:var(--surface-2); color:var(--ink); }
+  .toc a.active{ background:var(--accent-soft); color:var(--accent); border-left-color:var(--accent); font-weight:600; }
+  .toc a.active .n{ color:var(--accent); }
+  @media (max-width: 920px){
+    .toc{ position:static; margin-bottom:8px; }
+    .toc ol{ flex-direction:row; flex-wrap:wrap; }
+    .toc a{ font-size:13px; padding:6px 10px; }
+  }
+
+  /* ---------- main column ---------- */
+  main{ min-width:0; }
+
+  .stage{
+    padding-top:8px;
+    margin-bottom:76px;
+    scroll-margin-top:24px;
+  }
+  .stage-head{
+    display:flex; gap:18px; align-items:flex-start;
+    margin-bottom:22px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--rule);
+  }
+  .stage-num{
+    font-family:'Fraunces', serif;
+    font-size:2.1rem;
+    font-weight:600;
+    color:var(--accent);
+    line-height:1;
+    min-width:1.4ch;
+  }
+  .stage-head h2{ font-size:1.7rem; margin-bottom:4px; }
+  .stage-head .stage-sub{ color:var(--ink-soft); font-size:.98rem; max-width:56ch; }
+
+  .lede{ max-width:68ch; color:var(--ink-soft); margin-bottom:22px; }
+  .lede b{ color:var(--ink); font-weight:600; }
+
+  .substep{
+    margin: 30px 0 20px;
+  }
+  .substep h3{
+    font-size:1.12rem;
+    display:flex; align-items:center; gap:10px;
+  }
+  .substep h3::before{
+    content:"";
+    width:8px; height:8px;
+    background:var(--accent);
+    border-radius:2px;
+    flex:none;
+  }
+  .substep p{ color:var(--ink-soft); max-width:66ch; margin: 6px 0 14px; }
+
+  .note{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--accent);
+    border-radius:4px;
+    padding:14px 18px;
+    font-size:.94rem;
+    color:var(--ink-soft);
+    max-width:70ch;
+    margin:16px 0;
+    box-shadow:var(--shadow);
+  }
+  .note b{ color:var(--ink); }
+
+  .lookfor{
+    margin:14px 0 0;
+    padding:0;
+    list-style:none;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .lookfor li{
+    display:flex; gap:10px;
+    font-size:.92rem;
+    color:var(--ink-soft);
+  }
+  .lookfor li::before{
+    content:"→";
+    color:var(--accent);
+    font-weight:600;
+    flex:none;
+  }
+  .lookfor b{ color:var(--ink); font-weight:600; }
+
+  /* ---------- browser-frame (screenshot recreation) ---------- */
+  .frame{
+    background:var(--app-bg);
+    border:1px solid var(--app-border);
+    border-radius:11px;
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    margin: 18px 0 8px;
+  }
+  .frame-bar{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 14px;
+    background:var(--app-surface);
+    border-bottom:1px solid var(--app-border);
+  }
+  .frame-dots{ display:flex; gap:6px; }
+  .frame-dots i{ width:9px; height:9px; border-radius:50%; background:#3a3f4f; display:block; }
+  .frame-url{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--app-text-dim);
+    background:var(--app-bg);
+    border:1px solid var(--app-border);
+    border-radius:5px;
+    padding:3px 10px;
+    margin-left:6px;
+  }
+  .frame-body{
+    padding:22px clamp(16px,3vw,28px);
+    color:var(--app-text);
+    font-size:14px;
+  }
+  .frame-body h4{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+    color:var(--app-text-dim);
+    font-weight:600;
+    margin:0 0 12px;
+  }
+  .frame-nav{
+    display:flex; gap:18px; flex-wrap:wrap;
+    font-size:12.5px; color:var(--app-text-dim);
+    padding-bottom:12px; margin-bottom:16px;
+    border-bottom:1px solid var(--app-border);
+  }
+  .frame-nav span.on{ color:var(--app-blue); font-weight:600; border-bottom:2px solid var(--app-blue); padding-bottom:11px; margin-bottom:-12px; }
+
+  .pillrow{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .pill{
+    font-size:11.5px;
+    padding:5px 11px;
+    border-radius:20px;
+    border:1px solid var(--app-border);
+    color:var(--app-text-dim);
+    background:var(--app-surface);
+  }
+  .pill.on{ background:var(--app-blue); color:#0a0d15; border-color:var(--app-blue); font-weight:600; }
+
+  .banner{
+    background:var(--app-surface-2);
+    border:1px solid var(--app-border);
+    border-left:3px solid var(--app-blue);
+    border-radius:5px;
+    padding:11px 14px;
+    font-size:12.5px;
+    color:var(--app-text-dim);
+    margin-bottom:16px;
+  }
+  .banner b{ color:var(--app-text); }
+
+  .card{
+    background:var(--app-surface);
+    border:1px solid var(--app-border);
+    border-radius:8px;
+    padding:16px 18px;
+  }
+  .card + .card{ margin-top:12px; }
+
+  .ticker-name{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--app-text); }
+  .qualify-badge{
+    float:right;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--app-green);
+    font-weight:600;
+  }
+
+  .checklist-group{ margin-top:14px; }
+  .checklist-group .cg-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--app-text-dim);
+    margin-bottom:8px;
+  }
+  .checklist{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
+  .checklist li{
+    display:flex; justify-content:space-between; gap:14px;
+    font-size:12.8px;
+    padding-bottom:7px;
+    border-bottom:1px dashed var(--app-border);
+  }
+  .checklist li:last-child{ border-bottom:none; padding-bottom:0; }
+  .checklist .cl-label{ color:var(--app-text); display:flex; gap:8px; }
+  .checklist .cl-label .mark{ color:var(--app-green); flex:none; }
+  .checklist .cl-label .mark.dot{ color:var(--app-text-dim); }
+  .checklist .cl-val{ color:var(--app-text-dim); font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
+
+  /* identity / chart strip */
+  .identity{
+    display:flex; flex-wrap:wrap; gap:10px;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .identity .sym{ font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; color:var(--app-text); }
+  .identity .co{ color:var(--app-text-dim); font-size:13px; }
+  .tag{
+    font-size:11px; padding:3px 9px; border-radius:5px;
+    background:var(--app-surface-2); border:1px solid var(--app-border);
+    color:var(--app-text-dim);
+  }
+  .price-row{ display:flex; align-items:baseline; gap:12px; margin:6px 0 16px; }
+  .price-row .px{ font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:600; color:var(--app-text); }
+  .price-row .chg{ font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--app-red); font-weight:600; }
+
+  .spark{ display:block; width:100%; height:auto; margin: 4px 0 18px; }
+
+  .kv-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:14px 20px;
+    margin:14px 0;
+  }
+  .kv{ }
+  .kv .kl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--app-text-dim);
+    display:flex; align-items:center; gap:5px;
+    margin-bottom:5px;
+  }
+  .kv .kv2{ font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; color:var(--app-text); }
+  .kv .kv2.good{ color:var(--app-green); }
+  .kv .kv2.bad{ color:var(--app-red); }
+  .kv .ksub{ font-size:11px; color:var(--app-text-dim); margin-top:2px; }
+
+  .narrative-block{
+    background:var(--app-surface);
+    border:1px solid var(--app-border);
+    border-left:3px solid var(--app-green);
+    border-radius:6px;
+    padding:18px 20px;
+  }
+  .narrative-block .nh{
+    font-family:'Fraunces', serif;
+    font-size:16px; font-weight:600;
+    color:var(--app-text);
+    margin-bottom:12px;
+    line-height:1.4;
+  }
+  .narrative-block p{
+    font-size:13px; color:var(--app-text-dim); line-height:1.65;
+    margin: 0 0 12px;
+  }
+  .narrative-block p:last-child{ margin-bottom:0; }
+  .narrative-block p b{ color:var(--app-text); font-weight:600; }
+
+  .score-hero{
+    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .score-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:44px; font-weight:600; color:var(--app-green);
+    line-height:1;
+  }
+  .score-meta .sm-label{
+    font-size:15px; font-weight:600; color:var(--app-green);
+    letter-spacing:.03em;
+  }
+  .score-meta .sm-sub{ font-size:12px; color:var(--app-text-dim); margin-top:3px; }
+  .clock-badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .clock-badge{
+    font-size:11px; font-family:'IBM Plex Mono',monospace;
+    padding:4px 9px; border-radius:5px;
+    border:1px solid var(--app-border);
+    color:var(--app-text-dim);
+    display:flex; align-items:center; gap:6px;
+  }
+  .clock-badge i{ width:6px; height:6px; border-radius:50%; }
+  .clock-badge.amber i{ background:var(--app-amber); }
+  .clock-badge.green i{ background:var(--app-green); }
+
+  .ev-block{ margin-bottom:18px; }
+  .ev-block:last-child{ margin-bottom:0; }
+  .ev-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .ev-head .evn{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--app-text); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .ev-head .evs{ font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--app-text-dim); }
+  .ev-bar-track{ height:7px; border-radius:4px; background:var(--app-surface-2); overflow:hidden; margin-bottom:10px; }
+  .ev-bar-fill{ height:100%; border-radius:4px; background:var(--app-blue); }
+  .ev-sub{ display:flex; flex-direction:column; gap:6px; }
+  .ev-sub-row{ display:flex; justify-content:space-between; gap:12px; font-size:12px; }
+  .ev-sub-row .esl{ color:var(--app-text-dim); }
+  .ev-sub-row .esv{ font-family:'IBM Plex Mono',monospace; color:var(--app-text); white-space:nowrap; }
+  .ev-sub-row .esr{ color:var(--app-text-dim); font-size:11px; white-space:nowrap; }
+
+  .phase-headline{
+    font-size:15px; font-weight:600; color:var(--app-text);
+    margin-bottom:6px;
+  }
+  .phase-headline .arrow{ color:var(--app-green); }
+  .phase-desc{ font-size:12.5px; color:var(--app-text-dim); margin-bottom:16px; max-width:60ch; }
+
+  .phase-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:6px;
+    max-width:420px;
+    margin: 10px 0 18px;
+  }
+  .phase-cell{
+    aspect-ratio: 1.5 / 1;
+    border-radius:6px;
+    border:1px solid var(--app-border);
+    background:var(--app-surface-2);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    font-size:10.5px;
+    color:var(--app-text-dim);
+    padding:6px;
+    line-height:1.25;
+  }
+  .phase-cell.now{
+    background: color-mix(in srgb, var(--app-green) 18%, var(--app-surface-2));
+    border-color:var(--app-green);
+    color:var(--app-text);
+    font-weight:600;
+  }
+
+  .timeline-strip{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+  .tl-row{ display:flex; gap:14px; align-items:center; font-size:12px; }
+  .tl-row .tld{ font-family:'IBM Plex Mono',monospace; color:var(--app-text-dim); width:110px; flex:none; }
+  .tl-row .tlp{ font-weight:600; color:var(--app-text); width:150px; flex:none; }
+  .tl-dims{ display:flex; gap:8px; flex-wrap:wrap; }
+  .dim-chip{ font-size:10.5px; padding:2px 8px; border-radius:20px; border:1px solid var(--app-border); color:var(--app-text-dim); }
+  .dim-chip.pos{ color:var(--app-green); border-color:color-mix(in srgb, var(--app-green) 40%, var(--app-border)); }
+  .dim-chip.neg{ color:var(--app-red); border-color:color-mix(in srgb, var(--app-red) 40%, var(--app-border)); }
+
+  table.dtable{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.dtable th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--app-text-dim);
+    padding:0 10px 8px 0;
+    border-bottom:1px solid var(--app-border);
+    font-weight:600;
+  }
+  table.dtable td{
+    padding:8px 10px 8px 0;
+    border-bottom:1px solid var(--app-border);
+    color:var(--app-text);
+    white-space:nowrap;
+  }
+  table.dtable tr:last-child td{ border-bottom:none; }
+  table.dtable td.num{ font-family:'IBM Plex Mono',monospace; text-align:right; }
+  .tbl-wrap{ overflow-x:auto; margin: 6px 0 4px; }
+  .up{ color:var(--app-green); }
+  .down{ color:var(--app-red); }
+
+  .two-col{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
+  @media (max-width: 640px){ .two-col{ grid-template-columns:1fr; } }
+  .three-col{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
+  @media (max-width: 760px){ .three-col{ grid-template-columns:1fr; } }
+
+  .zone-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11.5px; padding:5px 10px; border-radius:5px;
+    background: color-mix(in srgb, var(--app-green) 14%, var(--app-surface-2));
+    color:var(--app-green);
+    border:1px solid color-mix(in srgb, var(--app-green) 35%, var(--app-border));
+    margin-bottom:10px;
+  }
+  .confluence-list{ list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .confluence-list li{
+    font-size:12px; color:var(--app-text-dim);
+    display:flex; justify-content:space-between; gap:10px;
+    padding-bottom:6px; border-bottom:1px dashed var(--app-border);
+  }
+  .confluence-list li:last-child{ border:none; padding-bottom:0; }
+  .confluence-list b{ color:var(--app-text); font-family:'IBM Plex Mono',monospace; font-weight:600; }
+
+  .verdict-box{
+    background:var(--app-surface);
+    border:1px solid var(--app-border);
+    border-left:3px solid var(--app-amber);
+    border-radius:6px;
+    padding:16px 18px;
+    margin-bottom:16px;
+  }
+  .verdict-box .vh{ font-weight:600; color:var(--app-amber); font-size:13.5px; margin-bottom:6px; }
+  .verdict-box p{ font-size:12.5px; color:var(--app-text-dim); margin:0; line-height:1.6; }
+
+  /* ---------- glossary / footer ---------- */
+  .glossary-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:14px;
+    margin-top:18px;
+  }
+  .gterm{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:8px;
+    padding:14px 16px;
+    box-shadow:var(--shadow);
+  }
+  .gterm .gt-name{ font-weight:600; font-size:.92rem; margin-bottom:4px; }
+  .gterm .gt-def{ font-size:.86rem; color:var(--ink-soft); }
+
+  footer{
+    max-width:1180px; margin:0 auto; padding: 30px clamp(18px,4vw,56px) 60px;
+    border-top:1px solid var(--rule);
+    font-size:.85rem;
+    color:var(--ink-faint);
+  }
+  footer a{ color:var(--ink-soft); }
+
+  ::selection{ background: var(--accent-soft); color: var(--ink); }
+</style>
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="site-disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title" hidden>
+  <div class="disclaimer-box">
+    <div class="dm-title" id="dm-title"><svg><use href="#i-alert-triangle"/></svg>Example Site — Not Real Data</div>
+    <p><b>This is a demonstration website built to showcase web design and AI-assisted development. All data, figures, charts, tickers, and analysis shown are fictional and for illustration only</b> — none of it reflects any real security, company, or market.</p>
+    <p>Nothing on this site is financial, investment, or trading advice, and no professional or fiduciary relationship is created by using it. This site and its content are provided "as is," without warranty of any kind. By clicking "I Agree," you confirm you have read and agree to these terms, and that you will not rely on any information on this site for research, analysis, or decisions of any kind.</p>
+    <p style="font-size:.78rem; color:var(--ink-faint,#8a90a0);">This site uses your browser's local storage only to remember that you've dismissed this notice.</p>
+    <button type="button" class="dm-btn" id="disclaimer-ack">I Agree — Continue</button>
+  </div>
+</div>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="index.html" class="topnav-brand">
+      <span class="brand-mark"><img src="assets/brand-icon.png" alt=""></span>
+      Solaris
+    </a>
+    <div class="topnav-links">
+      <a href="index.html">Home</a>
+      <a href="walkthrough.html" class="active">Walkthrough</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="screener.html">Screener</a>
+      <a href="ticker-detail.html">Ticker Detail</a>
+      <a href="level-playbook.html">Playbook</a>
+      <a href="backtesting.html">Backtest</a>
+      <a href="features.html">Features</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a href="#" class="topnav-gh"><svg><use href="#i-github"/></svg>GitHub</a>
+  </div>
+</nav>
+
+<div style="background:var(--surface-2); border-bottom:1px solid var(--rule); padding:10px clamp(18px,4vw,56px); font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+  <span>This is the guided, one-ticker walkthrough — for the full feature-by-feature tour see <a href="architecture.html" style="color:var(--link);">Architecture</a> and <a href="features.html" style="color:var(--link);">Features</a>.</span>
+</div>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="kicker">Solaris Flow · guided walkthrough</div>
+    <h1 class="title">Reading the Tape</h1>
+    <p class="dek">
+      A start-to-finish tour of the desk, told through <b>one real ticker</b> — Example, as it stood live
+      at today's sync. Same order the desk itself argues in: pick a candidate in the
+      <b>Screener</b>, read what the <b>Ticker Detail</b> page concludes and why, decide what to do about a level in the
+      <b>Level Playbook</b>, then check whether any of it actually worked in the <b>Backtest</b>.
+    </p>
+    <div class="meta-row">
+      <span>Ticker <b>Example · Example Company</b></span>
+      <span>Sector <b>Health Care (XLV)</b></span>
+      <span>Synced <b>2026-08-29 07:44 UTC</b></span>
+      <span>historical data quarter <b>ended 2026-06-30, filed 2026-08-14</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" id="toc">
+    <div class="toc-label">On this page</div>
+    <ol>
+      <li><a href="#stage-1"><span class="n">01</span> Screener</a></li>
+      <li><a href="#stage-2"><span class="n">02</span> Ticker Detail</a></li>
+      <li><a href="#stage-3"><span class="n">03</span> Level Playbook</a></li>
+      <li><a href="#stage-4"><span class="n">04</span> Backtest</a></li>
+      <li><a href="#stage-5"><span class="n">05</span> Rest of the desk</a></li>
+      <li><a href="#glossary"><span class="n">·</span> Glossary</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ============ STAGE 1 ============ -->
+    <section class="stage" id="stage-1">
+      <div class="stage-head">
+        <div class="stage-num">01</div>
+        <div>
+          <h2>Find a candidate in the Screener</h2>
+          <div class="stage-sub">Layer 2 — universe and setup preconditions. This is where a session starts: not "is Example good," but "which of 529 names even clear the bar today."</div>
+        </div>
+      </div>
+
+      <p class="lede">
+        Open the <b>Screener (L2)</b> tab and pick a watchlist or filter — <b>My watchlist</b> below.
+        Each candidate is scored against a fixed checklist grouped into four categories. A name that
+        clears every automatable box shows <b>QUALIFIES · 12/12</b>; a manual-only box (optionable, earnings
+        distance, pending M&A) is marked with a dot, never a check — the desk can't see it from a price feed,
+        so it never silently counts it as a pass.
+      </p>
+
+      <div class="frame">
+        <div class="frame-bar">
+          <div class="frame-dots"><i></i><i></i><i></i></div>
+          <span class="frame-url">index.html — Screener (L2)</span>
+        </div>
+        <div class="frame-body">
+          <div class="pillrow">
+            <span class="pill on">My watchlist</span>
+            <span class="pill">Candidates in leading sectors</span>
+            <span class="pill">In accumulation</span>
+            <span class="pill">Discount (VWAP)</span>
+            <span class="pill">Close to VAL</span>
+            <span class="pill">Near Earnings Dates</span>
+          </div>
+
+          <div class="banner">
+            <b>Layer 2 — universe and setup preconditions.</b> 20 of 529 names pass every automatable filter;
+            162 miss by one or two. Passing is <i>not</i> a trade — Layer 3 setup qualification and the
+            Layer 7 checklist still apply. Three rules (optionable, earnings &gt;7 sessions away, no pending
+            M&amp;A/lockup/rebalance) need data a price feed cannot supply and are marked <b>manual</b>.
+          </div>
+
+          <div class="card">
+            <span class="qualify-badge">QUALIFIES · 12/12</span>
+            <span class="ticker-name">Example</span> <span style="color:var(--app-text-dim)">$432.42 · XLV (rank 2) — Biological Products, (No Diagnostic Substances)</span>
+
+            <div class="checklist-group">
+              <div class="cg-label">Universe</div>
+              <ul class="checklist">
+                <li><span class="cl-label"><span class="mark">✓</span>Price &gt; $10</span><span class="cl-val">$432.42</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>20d avg dollar volume &gt; $25M</span><span class="cl-val">$1,074M</span></li>
+                <li><span class="cl-label"><span class="mark dot">•</span>Optionable</span><span class="cl-val">not in feed — check broker</span></li>
+                <li><span class="cl-label"><span class="mark dot">•</span>Earnings &gt; 7 sessions away</span><span class="cl-val">confirm manually</span></li>
+                <li><span class="cl-label"><span class="mark dot">•</span>No pending M&amp;A / lockup / rebalance</span><span class="cl-val">confirm manually</span></li>
+              </ul>
+            </div>
+
+            <div class="checklist-group">
+              <div class="cg-label">Relative strength</div>
+              <ul class="checklist">
+                <li><span class="cl-label"><span class="mark">✓</span>Outperforms SPX over 63d</span><span class="cl-val">29.1% vs 2%</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>Outperforms its sector (XLV) over 21d</span><span class="cl-val">12.1% vs 4.7%</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>Sector ranked in the top 3</span><span class="cl-val">XLV is #2 of 11</span></li>
+              </ul>
+            </div>
+
+            <div class="checklist-group">
+              <div class="cg-label">Trend structure</div>
+              <ul class="checklist">
+                <li><span class="cl-label"><span class="mark">✓</span>Price &gt; 200DMA</span><span class="cl-val">$351.47</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>200DMA flat or rising</span><span class="cl-val">+3.76% over 20 sessions</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>50DMA &gt; 200DMA</span><span class="cl-val">50DMA $385.94</span></li>
+              </ul>
+            </div>
+
+            <div class="checklist-group">
+              <div class="cg-label">Contraction</div>
+              <ul class="checklist">
+                <li><span class="cl-label"><span class="mark">✓</span>ATR(14) below its own 50d average</span><span class="cl-val">9.06 vs avg 10.01</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>Range tightening over last 10–20 sessions</span><span class="cl-val">last 10d 39.01 vs prior 45.56</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>Consolidation volume below the 20d average</span><span class="cl-val">5d 2.1M vs 20d 2.6M</span></li>
+                <li><span class="cl-label"><span class="mark">✓</span>Accumulation days outnumber distribution</span><span class="cl-val">4 vs 3, last 25d</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="lookfor">
+        <li><b>QUALIFIES vs CLOSE</b> — a name missing one or two boxes still shows up under "Close," worth a second look, not a pass.</li>
+        <li><b>Dots aren't failures</b> — a manual-only box never disqualifies a name; it's a reminder to confirm by hand before entry.</li>
+        <li>Clicking a candidate is how you carry a ticker into the next stage — everything from here on is Example specifically.</li>
+      </ul>
+    </section>
+
+    <!-- ============ STAGE 2 ============ -->
+    <section class="stage" id="stage-2">
+      <div class="stage-head">
+        <div class="stage-num">02</div>
+        <div>
+          <h2>Read the argument on Ticker Detail</h2>
+          <div class="stage-sub">Type the ticker into <b>Ticker Detail → Overview &amp; Verdict</b> and hit Load. The page reads top to bottom as one argument: what it is, what the desk concludes, how that's changed, then the evidence itself.</div>
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Identity, chart, and this week</h3>
+        <p>The header never scores anything — it's the chart's own information: who the company is, where the close sits in the 52-week range, and whether volume has been backing the move.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar">
+          <div class="frame-dots"><i></i><i></i><i></i></div>
+          <span class="frame-url">index.html — Ticker Detail → Overview &amp; Verdict</span>
+        </div>
+        <div class="frame-body">
+          <div class="frame-nav">
+            <span class="on">Overview &amp; Verdict</span>
+            <span>Evidence &amp; Data</span>
+            <span>Level Playbook</span>
+            <span>Backtest</span>
+          </div>
+
+          <div class="identity">
+            <span class="sym">Example</span>
+            <span class="co">Example Company · last session 2026-08-28 · 1,255 stored sessions</span>
+          </div>
+          <div class="pillrow" style="margin-bottom:14px;">
+            <span class="tag">Health Care (XLV)</span>
+            <span class="tag">Biological Products, (No Diagnostic Substances)</span>
+            <span class="tag">$236.25B · mega cap</span>
+            <span class="tag">float 99.6%</span>
+          </div>
+
+          <div class="price-row">
+            <span class="px tab">432.42</span>
+            <span class="chg tab">−1.05% today</span>
+          </div>
+
+          <svg class="spark" viewBox="0 0 600 90" preserveAspectRatio="none" role="img" aria-label="Five-month uptrend from roughly 300 to 432, closing near the highs">
+            <polyline points="0,72 40,68 80,70 120,60 160,64 200,55 240,58 280,44 320,48 360,36 400,30 440,20 480,24 520,10 560,14 600,8"
+              fill="none" stroke="#6f97f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="0" y1="8" x2="600" y2="8" stroke="#3ecf6f" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+          </svg>
+
+          <div class="kv-grid">
+            <div class="kv">
+              <div class="kl">52-week range</div>
+              <div class="kv2">262.49 → 447.03</div>
+              <div class="ksub">92% of the way up · −3.3% from high · +64.7% above low</div>
+            </div>
+            <div class="kv">
+              <div class="kl">This week</div>
+              <div class="kv2 bad">−1.79%</div>
+              <div class="ksub">440.31 → 432.42 · 3.7% range vs 6.2% median (13wk)</div>
+            </div>
+            <div class="kv">
+              <div class="kl">Cumulative volume</div>
+              <div class="kv2 good">51.52M / 20d</div>
+              <div class="ksub">+9.65% vs prior 20 · 1.46× more on up closes</div>
+            </div>
+            <div class="kv">
+              <div class="kl">OBV</div>
+              <div class="kv2 good">Confirming advance</div>
+              <div class="ksub">+4.2 days of avg volume over 25 sessions</div>
+            </div>
+            <div class="kv">
+              <div class="kl">RSI(14)</div>
+              <div class="kv2">64.6</div>
+              <div class="ksub">neutral · bull range</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>The narrative — the first thing anyone reads</h3>
+        <p>Every figure below it is stated in full, never aggregated from a truncated list — the composite weighs only hedge and active managers, so the all-filer dollar total and the scored figure are both spelled out.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — narrative</span></div>
+        <div class="frame-body">
+          <div class="narrative-block">
+            <div class="nh">Example leans toward accumulation — 63/100 with high confidence, drawn from 100% of the desk's usual evidence.</div>
+            <p>Example is Example Company, in Biological Products, (No Diagnostic Substances) (Health Care sector, XLV), a mega cap name. Relative strength: leading its XLV sector, and leading the S&amp;P 500.</p>
+            <p>31 tracked institutions filed for both 2026-03-31 and 2026-06-30, and between those filings they bought a net <b>$8.73B</b> more than they sold ($11.44B bought against $2.71B sold). Of those, 19 added to their stake, 11 trimmed it, 1 opened a brand-new position, and 0 exited entirely.</p>
+            <p>The ownership score weighs only the hedge funds and active managers in that set, since an index fund's position tracks its benchmark rather than an opinion about Example: 12 of them traded it, buying a net <b>$5.96B</b>. Their share count moved <b>+23.14%</b> quarter-over-quarter, and that is the figure the ownership block scores.</p>
+            <p>Day-to-day trading through 2026-08-28 leans toward accumulation — money has been flowing in over the past month, and the stock has outpaced the S&amp;P 500 by <b>27.18 points</b> over the last quarter.</p>
+            <p>Biggest single move: , an index/passive filer the score does not weigh, added $3.78B (27% of what it held before) — 43% the size of the whole group's net change. 1 brand-new position opened this quarter, $2.04B combined.</p>
+            <p>Insider selling: 6 open-market sales in the last 90 days against 0 purchases, net <b>−$4.1M</b>, 100% of them outside a pre-scheduled 10b5-1 plan.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Composite Signal and the four evidence blocks</h3>
+        <p>The 0–100 score blends only what's shown below it — click any block on the real page to see the sub-metrics that built it. Weights are fixed: ownership 30%, live tape 35%, short side 20%, insider 15%.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — composite signal</span></div>
+        <div class="frame-body">
+          <div class="score-hero">
+            <div class="score-num tab">63.1</div>
+            <div class="score-meta">
+              <div class="sm-label">ACCUMULATION</div>
+              <div class="sm-sub">confidence <b style="color:var(--app-green)">high</b> · evidence coverage 100%</div>
+              <div class="clock-badges">
+                <span class="clock-badge amber"><i></i> · Q ending 2026-06-30 · 60d old</span>
+                <span class="clock-badge green"><i></i>market tape · as of 2026-08-28 · 2d old</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ev-block">
+            <div class="ev-head"><span class="evn">liveFlow</span><span class="evs tab">66.5 · 35%</span></div>
+            <div class="ev-bar-track"><div class="ev-bar-fill" style="width:66.5%"></div></div>
+            <div class="ev-sub">
+              <div class="ev-sub-row"><span class="esl">Chaikin Money Flow (21d)</span><span class="esv">0.236</span><span class="esr">rank 95</span></div>
+              <div class="ev-sub-row"><span class="esl">Close location (20d)</span><span class="esv">0.220</span><span class="esr">rank 94</span></div>
+              <div class="ev-sub-row"><span class="esl">Up/Down volume ratio (50d)</span><span class="esv">1.317×</span><span class="esr">rank 65</span></div>
+              <div class="ev-sub-row"><span class="esl">Relative strength vs SPX (63d)</span><span class="esv">27.2pp</span><span class="esr">rank 99</span></div>
+            </div>
+          </div>
+
+          <div class="ev-block">
+            <div class="ev-head"><span class="evn">Short side</span><span class="evs tab">63.8 · 20%</span></div>
+            <div class="ev-bar-track"><div class="ev-bar-fill" style="width:63.8%"></div></div>
+            <div class="ev-sub">
+              <div class="ev-sub-row"><span class="esl">Off-exchange short-vol ratio</span><span class="esv">−40.5%</span><span class="esr">rank 85</span></div>
+              <div class="ev-sub-row"><span class="esl">Short interest Δ</span><span class="esv">9.3%</span><span class="esr">rank 78</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="note"><b>Nothing here is silent.</b> A block can return null with a note saying why data was unavailable, rather than scoring it as neutral — and every rank is measured against that security's own history, not a universal cutoff.</div>
+
+      <div class="substep">
+        <h3>State &amp; Transition — how the read has changed</h3>
+        <p>Two axes only: 25-session price drift and a 4-metric flow composite, crossed into nine named cells. Ownership, short pressure, relative strength and the nowcast are shown as context circles and deliberately never move the phase.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — state &amp; transition</span></div>
+        <div class="frame-body">
+          <div class="phase-headline">Confirmed advance <span class="arrow">—</span> since 2026-08-19 (8 sessions)</div>
+          <div class="phase-desc">Price is trending up and the tape is buying it. Nothing to argue with — the risk is being late, not being wrong. Axes today: price drift +1.50 · flow +0.75σ. Previously: Unbacked advance for 17 sessions (+13.0%), until 2026-08-18.</div>
+
+          <div class="phase-grid">
+            <div class="phase-cell">Accumulation</div>
+            <div class="phase-cell now">Confirmed<br>advance</div>
+            <div class="phase-cell" style="opacity:.5">—</div>
+            <div class="phase-cell">Absorption</div>
+            <div class="phase-cell">Unbacked<br>advance</div>
+            <div class="phase-cell" style="opacity:.5">—</div>
+            <div class="phase-cell">Distribution</div>
+            <div class="phase-cell">Distribution<br>risk</div>
+            <div class="phase-cell">Confirmed<br>decline</div>
+          </div>
+
+          <div class="timeline-strip">
+            <div class="tl-row">
+              <span class="tld">30d ago · 07-29</span>
+              <span class="tlp">Unbacked advance</span>
+              <span class="tl-dims">
+                <span class="dim-chip neg">historical data distributing</span>
+                <span class="dim-chip">tape neutral</span>
+                <span class="dim-chip pos">RS leading</span>
+                <span class="dim-chip neg">nowcast diverges</span>
+                <span class="dim-chip neg">short building</span>
+              </span>
+            </div>
+            <div class="tl-row">
+              <span class="tld">15d ago · 08-13</span>
+              <span class="tlp">Unbacked advance</span>
+              <span class="tl-dims">
+                <span class="dim-chip neg">historical data distributing</span>
+                <span class="dim-chip">tape neutral</span>
+                <span class="dim-chip pos">RS leading</span>
+                <span class="dim-chip neg">nowcast diverges</span>
+                <span class="dim-chip pos">short covering</span>
+              </span>
+            </div>
+            <div class="tl-row">
+              <span class="tld"><b style="color:var(--app-text)">Today · 08-28</b></span>
+              <span class="tlp" style="color:var(--app-green)">Confirmed advance</span>
+              <span class="tl-dims">
+                <span class="dim-chip pos">tape accumulation</span>
+                <span class="dim-chip pos">RS leading</span>
+                <span class="dim-chip pos">nowcast confirms</span>
+                <span class="dim-chip pos">short stable</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="lookfor">
+        <li><b>A phase must clear ±0.5</b> to be entered and hold down to ±0.25 for 3 sessions before it's published — a single hot day can't flip the label.</li>
+        <li>This run is 8 sessions old — the <b>38th percentile</b> of Example's 16 prior confirmed-advance runs (median 11, longest 38).</li>
+        <li>Nothing on this panel feeds the composite score — it re-reads evidence the score already used.</li>
+      </ul>
+
+      <div class="substep">
+        <h3>historical data Institutional Ownership → Largest Holders → Position Changes</h3>
+        <p>Quarterly and up to 45 days stale by design — this is the legal disclosure, not the live tape. Deltas compare only managers who filed for both quarters; a manager who hasn't filed yet is excluded, never counted as a seller.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — historical data </span></div>
+        <div class="frame-body">
+          <div class="kv-grid" style="margin-bottom:20px;">
+            <div class="kv"><div class="kl">Tracked inst. shares</div><div class="kv2">203.48M</div><div class="ksub">31 of the tracked managers hold it</div></div>
+            <div class="kv"><div class="kl">% of free float</div><div class="kv2">37.79%</div><div class="ksub">float 538.47M</div></div>
+            <div class="kv"><div class="kl">Position value</div><div class="kv2">$73.66B</div><div class="ksub">mkt cap $236.25B</div></div>
+            <div class="kv"><div class="kl">Net shares QoQ</div><div class="kv2 good">+10.3%</div><div class="ksub">24.08M shares</div></div>
+            <div class="kv"><div class="kl">Active-only QoQ</div><div class="kv2 good">+23.1%</div><div class="ksub">index funds excluded</div></div>
+            <div class="kv"><div class="kl">Breadth</div><div class="kv2">+29%</div><div class="ksub">1 new · 19 add · 11 trim · 0 exit</div></div>
+          </div>
+
+          <h4>Largest holders</h4>
+          <div class="tbl-wrap">
+            <table class="dtable">
+              <tr><th>Manager</th><th>Type</th><th style="text-align:right">Shares</th><th style="text-align:right">% Float</th><th style="text-align:right">Δ QoQ</th></tr>
+              <tr><td></td><td>passive</td><td class="num">49.36M</td><td class="num">9.17%</td><td class="num up">+26.9%</td></tr>
+              <tr><td>Example Company</td><td>passive</td><td class="num">30.56M</td><td class="num">5.68%</td><td class="num">+0.0%</td></tr>
+              <tr><td>Institution C</td><td>active</td><td class="num">16.32M</td><td class="num">3.03%</td><td class="num up">+44.3%</td></tr>
+              <tr><td>Institution E</td><td>passive</td><td class="num">15.70M</td><td class="num">2.91%</td><td class="num up">+1.7%</td></tr>
+              <tr><td>Institution D</td><td>bank</td><td class="num">13.65M</td><td class="num">2.54%</td><td class="num down">−13.8%</td></tr>
+            </table>
+          </div>
+
+          <h4 style="margin-top:18px;">Biggest position changes</h4>
+          <div class="tbl-wrap">
+            <table class="dtable">
+              <tr><th>Manager</th><th>Action</th><th style="text-align:right">Traded $</th><th style="text-align:right">Δ Book Wt</th></tr>
+              <tr><td></td><td class="up">ADD</td><td class="num">$3.78B</td><td class="num up">+5.6bp</td></tr>
+              <tr><td>Institution A</td><td class="up">NEW</td><td class="num">$2.04B</td><td class="num up">+20.3bp</td></tr>
+              <tr><td>Institution C</td><td class="up">ADD</td><td class="num">$1.81B</td><td class="num up">+14.4bp</td></tr>
+              <tr><td>Institution F</td><td class="down">TRIM</td><td class="num">−$1.33B</td><td class="num down">−7.8bp</td></tr>
+              <tr><td>Institution B</td><td class="up">ADD</td><td class="num">$910.5M</td><td class="num up">+15.7bp</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Nowcast — bridging the reporting gap</h3>
+        <p>historical data says what institutions held 60 days ago. The Nowcast asks only whether the tape since then has moved with or against that direction — modelled inference, never treated as disclosure.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — nowcast</span></div>
+        <div class="frame-body">
+          <div class="verdict-box" style="border-left-color:var(--app-green)">
+            <div class="vh" style="color:var(--app-green)">TREND LIKELY CONTINUING — BUYING</div>
+            <p>Tape agrees with the last-confirmed direction <b style="color:var(--app-text)">100%</b> of the gap window. Tape since the 2026-06-30 quarter-close is consistent with continued buying — plausible, but inferred from price/volume, not disclosed.</p>
+          </div>
+          <div class="kv-grid">
+            <div class="kv"><div class="kl">Last confirmed (historical data)</div><div class="kv2 good">buying</div><div class="ksub">+23.1% as of 2026-06-30</div></div>
+            <div class="kv"><div class="kl">Gap window</div><div class="kv2">42</div><div class="ksub">sessions since quarter-close</div></div>
+            <div class="kv"><div class="kl">Price since</div><div class="kv2 good">+20.4%</div><div class="ksub">observed, not inferred</div></div>
+            <div class="kv"><div class="kl">Money flow since</div><div class="kv2">0.150</div><div class="ksub">CMF over the gap</div></div>
+            <div class="kv"><div class="kl">Up/Down vol since</div><div class="kv2">1.22</div><div class="ksub">&gt;1 favours advances</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Daily order-flow · short side · insiders</h3>
+        <p>Three tighter panels, each scored above but shown here with the actual reading. Off-exchange short volume in particular is a weak signal by design — most of it is market-maker hedging, not directional bets.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — order-flow / short side / insiders</span></div>
+        <div class="frame-body">
+          <div class="three-col">
+            <div class="card">
+              <h4>Daily order-flow</h4>
+              <div class="checklist">
+                <li><span class="cl-label">CMF (21d)</span><span class="cl-val">0.236</span></li>
+                <li><span class="cl-label">Up/Down vol (50d)</span><span class="cl-val">1.32</span></li>
+                <li><span class="cl-label">Accum/Dist days</span><span class="cl-val">4 / 3</span></li>
+                <li><span class="cl-label">Block days (A/D)</span><span class="cl-val">2 / 2</span></li>
+                <li><span class="cl-label">RS vs SPX (63d)</span><span class="cl-val up">+27.2%</span></li>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Off-exchange &amp; short</h4>
+              <div class="checklist">
+                <li><span class="cl-label">Off-exch short ratio</span><span class="cl-val">40.5%</span></li>
+                <li><span class="cl-label">20d average</span><span class="cl-val">52.8%</span></li>
+                <li><span class="cl-label">Z-score (60d)</span><span class="cl-val">−1.02</span></li>
+                <li><span class="cl-label">Short interest</span><span class="cl-val">2.2% of float</span></li>
+                <li><span class="cl-label">Days to cover</span><span class="cl-val">4.34</span></li>
+              </div>
+            </div>
+            <div class="card">
+              <h4></h4>
+              <div class="checklist">
+                <li><span class="cl-label">Open-market buys</span><span class="cl-val">0 · $0</span></li>
+                <li><span class="cl-label">Open-market sells</span><span class="cl-val">6 · $4.1M</span></li>
+                <li><span class="cl-label">Net</span><span class="cl-val down">−$4.1M</span></li>
+                <li><span class="cl-label">10b5-1 planned</span><span class="cl-val">0% of sells</span></li>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Business fundamentals — context, not a timer</h3>
+        <p>Over a 5–25 session swing hold, fundamentals rarely drive the move — the tape does. They matter mainly as risk: what can gap against you.</p>
+      </div>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — business fundamentals</span></div>
+        <div class="frame-body">
+          <div class="tbl-wrap">
+            <table class="dtable">
+              <tr><th>Metric</th><th>Value</th><th style="text-align:right">Read</th></tr>
+              <tr><td>Revenue growth (YoY)</td><td>$10.05B vs $8.15B</td><td class="num up">+23.4%</td></tr>
+              <tr><td>Revenue momentum (QoQ)</td><td>16.7% then −9.8% prior</td><td class="num">accelerating</td></tr>
+              <tr><td>Net income (latest qtr)</td><td>$2.38B</td><td class="num up">profitable</td></tr>
+              <tr><td>Gross margin</td><td>70.7%</td><td class="num">stable</td></tr>
+              <tr><td>Current ratio</td><td>$35B vs $25.5B</td><td class="num">1.37 · adequate</td></tr>
+              <tr><td>LT debt / equity</td><td>$51.9B vs $11.7B</td><td class="num down">4.44 · heavily levered</td></tr>
+              <tr><td>Operating cash flow</td><td>$2.19B</td><td class="num up">self-funding</td></tr>
+              <tr><td>Free cash flow</td><td>opex $2.19B − capex $0.71B</td><td class="num up">$1.48B positive</td></tr>
+            </table>
+          </div>
+          <div class="note" style="margin-top:16px; margin-bottom:0;">The single most actionable item — the next earnings date — is <b>not</b> in this data. The plan requires it &gt;7 sessions away for a new entry; confirm before sizing.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 3 ============ -->
+    <section class="stage" id="stage-3">
+      <div class="stage-head">
+        <div class="stage-num">03</div>
+        <div>
+          <h2>Decide what to do — Level Playbook</h2>
+          <div class="stage-sub">Layer 3. Everything above described the name; this tab says what to do <i>now that price is at a level</i> — reconstructed volume profile and five AVWAP anchors, decided on closes, never on a wick.</div>
+        </div>
+      </div>
+
+      <p class="lede">
+        Pick an <b>anchor start</b> (last major pivot, base start, start of year, last earnings, since last FOMC,
+        or a fixed 21/63/252-session lookback) and an anchor end — <b>Live</b> by default — then hit <b>Analyse</b>.
+        Example's default 63-session read:
+      </p>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Ticker Detail → Level Playbook</span></div>
+        <div class="frame-body">
+          <div class="frame-nav">
+            <span>Overview &amp; Verdict</span>
+            <span>Evidence &amp; Data</span>
+            <span class="on">Level Playbook</span>
+            <span>Backtest</span>
+          </div>
+
+          <div class="kv-grid" style="margin-bottom:18px;">
+            <div class="kv"><div class="kl">Price</div><div class="kv2">432.42</div><div class="ksub">2026-08-28</div></div>
+            <div class="kv"><div class="kl">ATR(14)</div><div class="kv2">9.06</div><div class="ksub">2.09% of price</div></div>
+            <div class="kv"><div class="kl">Trend</div><div class="kv2 good">Uptrend</div><div class="ksub">50DMA 385.94</div></div>
+            <div class="kv"><div class="kl">Auction</div><div class="kv2">Above value</div><div class="ksub">profile: custom, 64 sessions</div></div>
+            <div class="kv"><div class="kl">Today RVOL</div><div class="kv2">0.67×</div><div class="ksub">20-day average</div></div>
+          </div>
+
+          <div class="verdict-box">
+            <div class="vh" style="color:var(--app-text)">No level in play</div>
+            <p>Price is not close enough to any mapped level for a level-based decision. This is the state the desk should be in most of the time. Set the alerts below and go do something else.</p>
+          </div>
+
+          <h4>Pattern history — failed breakdown at Custom VAL</h4>
+          <div class="timeline-strip" style="margin-bottom:18px;">
+            <div class="tl-row"><span class="tld">2026-06-01</span><span class="tlp" style="color:var(--app-red)">Undercut Custom VAL</span><span style="font-size:12px;color:var(--app-text-dim)">0.70 ATR excursion</span></div>
+            <div class="tl-row"><span class="tld">2026-06-03</span><span class="tlp" style="color:var(--app-green)">Reclaimed Custom VAL</span><span style="font-size:12px;color:var(--app-text-dim)">same shape Setup C gates on</span></div>
+          </div>
+
+          <h4>Where price sits in the auction</h4>
+          <span class="zone-tag">Profile shape — b-shaped (bottom-heavy)</span>
+          <p style="font-size:12.5px;color:var(--app-text-dim);max-width:60ch;margin:0 0 12px;">
+            Volume concentrated low in the range with a thin tail above — price fell through the top on light volume,
+            then heavy trade built near the lows. Reads as selling being absorbed, not the market advertising for
+            still-lower prices.
+          </p>
+          <div class="checklist" style="margin-bottom:14px;">
+            <li><span class="cl-label">Accumulation (demand) zone</span><span class="cl-val">339.42 – 367.90 · 46.8% of volume</span></li>
+          </div>
+          <h4>Confluence stacked below (support)</h4>
+          <ul class="confluence-list">
+            <li>Impulse POC <b>412.54</b></li>
+            <li>Fib 61.8% <b>388.24</b></li>
+            <li>AVWAP #6 (custom) <b>373.38</b></li>
+            <li>Impulse VAL <b>363.79</b></li>
+            <li>HVN 339.42–367.90 <b>353.39</b></li>
+            <li>6-month POC <b>345.69</b></li>
+          </ul>
+        </div>
+      </div>
+
+      <ul class="lookfor">
+        <li><b>"No level in play" is the honest default</b> — the state machine only speaks when price is close enough to a mapped level to matter.</li>
+        <li>A <b>TESTING</b> level always instructs waiting; only a <b>close</b> — never a wick — decides approaching / testing / rejected / breaking / accepted / failed-break.</li>
+        <li>The vertical scale on the real ladder is the profile's own span — never a longer window that would squash the read.</li>
+      </ul>
+    </section>
+
+    <!-- ============ STAGE 4 ============ -->
+    <section class="stage" id="stage-4">
+      <div class="stage-head">
+        <div class="stage-num">04</div>
+        <div>
+          <h2>Check the record — Backtest</h2>
+          <div class="stage-sub">Replays the Playbook's own Setup A/B/C detection over stored history. A thin ticker triggers a deeper sync automatically the first time.</div>
+        </div>
+      </div>
+
+      <p class="lede">Choose a lookback and press <b>Run backtest</b>. For Example: 750 sessions walked, 2023-09-01 → 2026-08-28.</p>
+
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Ticker Detail → Backtest</span></div>
+        <div class="frame-body">
+          <div class="frame-nav">
+            <span>Overview &amp; Verdict</span>
+            <span>Evidence &amp; Data</span>
+            <span>Level Playbook</span>
+            <span class="on">Backtest</span>
+          </div>
+
+          <h4>Per-setup performance</h4>
+          <div class="tbl-wrap" style="margin-bottom:20px;">
+            <table class="dtable">
+              <tr><th>Setup</th><th style="text-align:right">Signals</th><th style="text-align:right">Win rate</th><th style="text-align:right">Avg R</th><th style="text-align:right">Expectancy</th><th style="text-align:right">Max DD</th></tr>
+              <tr><td>A — AVWAP Reclaim Pullback</td><td class="num">9</td><td class="num">22%</td><td class="num up">+0.47</td><td class="num up">+0.47R</td><td class="num">2.00R</td></tr>
+              <tr><td>B — Value Area Breakout</td><td class="num">45</td><td class="num">42%</td><td class="num up">+0.12</td><td class="num up">+0.12R</td><td class="num">2.08R</td></tr>
+              <tr><td>C — Failed Breakdown / Absorption</td><td class="num">1</td><td class="num">100%</td><td class="num up">+0.27</td><td class="num up">+0.27R</td><td class="num">0.00R</td></tr>
+              <tr><td><b>All setups combined</b></td><td class="num"><b>55</b></td><td class="num"><b>40%</b></td><td class="num up"><b>+0.18</b></td><td class="num up"><b>+0.18R</b></td><td class="num"><b>2.56R</b></td></tr>
+              <tr><td>MA — 50/200 SMA crossover (baseline)</td><td class="num">3</td><td class="num">33%</td><td class="num down">−0.35</td><td class="num down">−0.35R</td><td class="num">1.64R</td></tr>
+            </table>
+          </div>
+
+          <div class="note" style="margin-bottom:20px;">
+            Every setup carries at least one condition (CVD, pullback-volume character) this desk can't score
+            from OHLCV — the live Playbook can never show a literal QUALIFIED; its ceiling is <b>NEEDS YOUR EYES</b>.
+            All 9 Setup-A and all 45 Setup-B trades in this run needed that manual confirmation. The MA baseline
+            never does — that contrast is the point of showing it alongside A/B/C.
+          </div>
+
+          <h4>Trade log — most recent</h4>
+          <div class="tbl-wrap" style="margin-bottom:22px;">
+            <table class="dtable">
+              <tr><th>Setup</th><th>Entry</th><th style="text-align:right">Entry px</th><th>Exit</th><th style="text-align:right">R</th><th>Exit reason</th></tr>
+              <tr><td>A</td><td>2026-07-23</td><td class="num">357.89</td><td>2026-08-28</td><td class="num up">+5.49R</td><td>still open at end of history</td></tr>
+              <tr><td>B</td><td>2026-07-20</td><td class="num">365.81</td><td>2026-08-03</td><td class="num up">+0.26R</td><td>time stop (no +1R in 10d)</td></tr>
+              <tr><td>B</td><td>2026-07-07</td><td class="num">372.11</td><td>2026-07-21</td><td class="num down">−0.16R</td><td>time stop (no +1R in 10d)</td></tr>
+            </table>
+          </div>
+
+          <h4>Prediction (experimental)</h4>
+          <div class="verdict-box">
+            <div class="vh">Verdict — no measurable edge</div>
+            <p>
+              Out-of-sample accuracy <b style="color:var(--app-text)">52.1%</b> against a <b style="color:var(--app-text)">53.1%</b> base
+              rate ("always up"), 95% interval 47.6%–56.5% over 482 multi-period sessions — the interval covers the
+              base rate, so this model is not distinguishable from simply calling every session up. This is the
+              expected result on most tickers and is not a bug.
+            </p>
+          </div>
+          <div class="kv-grid">
+            <div class="kv"><div class="kl">Next session</div><div class="kv2 bad">down</div><div class="ksub">45% model probability, ensemble ±12%</div></div>
+            <div class="kv"><div class="kl">OOS accuracy</div><div class="kv2">52.1%</div><div class="ksub">95% CI 47.6% – 56.5%</div></div>
+            <div class="kv"><div class="kl">Base rate to beat</div><div class="kv2">53.1%</div><div class="ksub">"always up," same sessions</div></div>
+            <div class="kv"><div class="kl">Edge</div><div class="kv2 bad">−1.0 pts</div><div class="ksub">p = 0.676 vs base rate</div></div>
+            <div class="kv"><div class="kl">AUC</div><div class="kv2">0.509</div><div class="ksub">0.50 = no ranking skill</div></div>
+            <div class="kv"><div class="kl">Calls made</div><div class="kv2">211 up / 271 down</div><div class="ksub">right 56% / 49% of the time</div></div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="lookfor">
+        <li><b>Read the win rate next to the expectancy</b> — Setup A wins only 22% of the time but still nets +0.47R; a few large winners carry many small, planned losses.</li>
+        <li>The predictor's honest "no edge" verdict is the common case — trust the multi-period interval over any single day's directional call.</li>
+        <li>This closes the loop back to Stage 1: a name that qualifies on the Screener, argues well on Ticker Detail, and has positive expectancy in the Backtest is what "worth the work" looks like.</li>
+      </ul>
+    </section>
+
+    <!-- ============ STAGE 5 — REST OF THE DESK ============ -->
+    <section class="stage" id="stage-5">
+      <div class="stage-head">
+        <div class="stage-num">05</div>
+        <div>
+          <h2>Beyond this walkthrough — the rest of the desk</h2>
+          <div class="stage-sub">Six more tabs live above and around the Screener → Ticker Detail → Playbook → Backtest loop this walkthrough follows. Real screenshots, current build.</div>
+        </div>
+      </div>
+
+      <p class="lede">
+        Where a session actually starts, most days: check the regime, check which sectors are worth being in, glance at the Board to see the whole watchlist ranked at once — <i>then</i> drill into a single name with the Screener and Ticker Detail flow above.
+      </p>
+
+      <div class="substep">
+        <h3>Board — the whole watchlist, ranked</h3>
+        <p>Every tracked ticker's composite score, verdict, confidence, and headline evidence in one table. This is the screen the desk opens to.</p>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Board</span></div>
+        <div class="frame-body" style="padding:0;">
+          <img src="assets/screens/board.jpg" alt="Solaris Flow Board tab — accumulation/distribution ranking table" style="width:100%; display:block;">
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Regime — Layer 0, one letter and two numbers</h3>
+        <p>R1 through R4, plus the max open risk and max position count that letter actually authorizes. SPX/GLD context and CPI charts underneath.</p>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Regime</span></div>
+        <div class="frame-body" style="padding:0;">
+          <img src="assets/screens/regime.jpg" alt="Solaris Flow Regime tab — R1 badge, SPX/GLD context, CPI charts" style="width:100%; display:block;">
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Sectors — Layer 1, you only shop in the top 3</h3>
+        <p>Every sector ETF ranked by relative strength with a quadrant read (Leading / Improving / Weakening / Lagging) — not a suggestion, a literal ranking the plan gates entries on.</p>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Sectors</span></div>
+        <div class="frame-body" style="padding:0;">
+          <img src="assets/screens/sector-rotation.jpg" alt="Solaris Flow Sectors tab — 11-sector RS ranking table with quadrant reads" style="width:100%; display:block;">
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Origins — historical data money, mapped geographically</h3>
+        <p>Every tracked filer's HQ, sized by holdings. The Ownership evidence block behind the composite score, made spatial.</p>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Origins</span></div>
+        <div class="frame-body" style="padding:0;">
+          <img src="assets/screens/origins.jpg" alt="Solaris Flow Origins tab — world map of tracked institutional filers sized by holdings" style="width:100%; display:block;">
+        </div>
+      </div>
+
+      <div class="substep">
+        <h3>Seasonality — which sleeve has historically led this month</h3>
+        <p>Every sector ETF's average excess return over SPX, month by month, with previous/current/next laid side by side.</p>
+      </div>
+      <div class="frame">
+        <div class="frame-bar"><div class="frame-dots"><i></i><i></i><i></i></div><span class="frame-url">index.html — Seasonality → Sector rotation</span></div>
+        <div class="frame-body" style="padding:0;">
+          <img src="assets/screens/seasonality.jpg" alt="Solaris Flow Seasonality tab — sector rotation leaders and laggards by month" style="width:100%; display:block;">
+        </div>
+      </div>
+
+      <div class="note">
+        Full write-ups of every layer, plus the position-sizing calculator, trade journal, trading scripts, and the standalone iPhone build, are on the <a href="index.html">main site</a> — this page stays focused on the one-ticker walkthrough above.
+      </div>
+    </section>
+
+    <section id="glossary" class="stage" style="margin-bottom:20px;">
+      <div class="stage-head">
+        <div class="stage-num">·</div>
+        <div>
+          <h2>Quick glossary</h2>
+          <div class="stage-sub">Badges and terms that recur across every tab.</div>
+        </div>
+      </div>
+      <div class="glossary-grid">
+        <div class="gterm"><div class="gt-name">Confidence: high / partial / nodata</div><div class="gt-def">How much of the composite's usual evidence was actually measurable — not how strong the signal is.</div></div>
+        <div class="gterm"><div class="gt-name">historical data vs Nowcast vs market tape</div><div class="gt-def">Three different clocks: quarterly and disclosed, modelled since the quarter closed, and live price/volume.</div></div>
+        <div class="gterm"><div class="gt-name">Confirmed vs Unbacked advance</div><div class="gt-def">Confirmed means price and flow agree; Unbacked means price is rising without the tape paying for it.</div></div>
+        <div class="gterm"><div class="gt-name">TESTING a level</div><div class="gt-def">Always instructs waiting — a level state is decided on closes, never on a wick.</div></div>
+        <div class="gterm"><div class="gt-name">NEEDS YOUR EYES</div><div class="gt-def">The Playbook's ceiling for any setup — some conditions (CVD, footprint) can't be scored from daily OHLCV.</div></div>
+        <div class="gterm"><div class="gt-name">R-multiple</div><div class="gt-def">Profit or loss measured against the original risk at entry, not the trailed stop that may have actually closed the trade.</div></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="legal-notice">
+  <div class="legal-notice-box">
+    <div class="legal-notice-inner">
+      <div class="ln-title"><svg><use href="#i-alert-triangle"/></svg>Important — Please Read</div>
+      <p><b style="color:#f26666;">All information and data on this site exist only to build an example website. Ignore them and do not use them for any analysis.</b></p>
+      <p><b>Not an automated trader.</b> Solaris Flow is a decision-support calculator only — every trade is entered and exited by hand in your broker. It synthesizes data, scores quality, and keeps a journal. It does not place orders, connect to a broker API, or touch real money.</p>
+      <p><b>Not financial advice.</b> This is a personal <b>research tool</b> and hobby project — I am not a licensed financial advisor, broker-dealer, or professional trader. I am simply interested in using AI to build interesting applications and explore new ideas in software development. Every ticker, chart, screenshot, and figure shown throughout this site — including all analysis and screenshots in this walkthrough — are illustrative examples for demonstration purposes only, not real trading analysis or recommendations on any specific security. This entire site and Solaris Flow application were built using <b>Claude Code</b> and AI.</p><p style="margin-top:10px;">This site and all its content are provided "as is," without warranty of any kind, express or implied, including as to accuracy, completeness, or fitness for a particular purpose. No fiduciary, advisory, or professional relationship is created by your use of this site. You are solely responsible for your own research, judgment, and any trading or investment decisions you make. By accessing or using this site or its information in any way, you assume all associated risk and agree to release, indemnify, and hold harmless the creator from any and all liability, claims, losses, or damages of any kind arising from or connected to that use.</p>
+    </div>
+  </div>
+</div>
+
+<footer style="max-width:1180px; margin:0 auto; padding: 30px clamp(18px,4vw,56px) 60px; border-top:1px solid var(--rule); font-size:.85rem; color:var(--ink-faint);">
+  Solaris Flow — a personal decision-support tool. Every figure above was read live from Example's
+  data on the desk at the sync time in the header; open the same tabs on any ticker to get today's own numbers.
+</footer>
+
+<script>
+(function(){
+  var modal = document.getElementById('site-disclaimer-modal');
+  if (modal){
+    var KEY = 'solaris-disclaimer-ack-v1';
+    var seen = false;
+    try { seen = !!localStorage.getItem(KEY); } catch(e){}
+    if (!seen){
+      modal.removeAttribute('hidden');
+      document.documentElement.style.overflow = 'hidden';
+    }
+    var ackBtn = document.getElementById('disclaimer-ack');
+    if (ackBtn){
+      ackBtn.addEventListener('click', function(){
+        modal.setAttribute('hidden', '');
+        document.documentElement.style.overflow = '';
+        try { localStorage.setItem(KEY, '1'); } catch(e){}
+      });
+    }
+  }
+})();
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+  if (!('IntersectionObserver' in window) || !sections.length) return;
+  var current = null;
+  function setActive(id){
+    if (id === current) return;
+    current = id;
+    links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
+  }
+  var io = new IntersectionObserver(function(entries){
+    var visible = entries.filter(function(e){ return e.isIntersecting; })
+      .sort(function(a,b){ return a.boundingClientRect.top - b.boundingClientRect.top; });
+    if (visible.length) setActive(visible[0].target.id);
+  }, { rootMargin: '-15% 0px -70% 0px', threshold: [0, 1] });
+  sections.forEach(function(s){ io.observe(s); });
+})();
+</script>
